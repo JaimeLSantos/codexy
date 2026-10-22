@@ -12,8 +12,11 @@ final class AppModel {
     var history = UsageHistory.load()
     /// Snapshots (dev aid) fill the model with made-up data: they must never write it to the real history file.
     @ObservationIgnored var persist = true
-    /// No Codex project scanner yet: nil, and the views that need it stay hidden.
+    /// Projects, models and turns of the last 7 days, from Codex's rollout files. nil until the first scan.
     var projects: ProjectUsage?
+    @ObservationIgnored private let scanner = RolloutScanner()
+    @ObservationIgnored private var scanning = false
+    @ObservationIgnored private var scannedAt = Date.distantPast
     var now = Date()
     private var failStreak = 0
     // MARK: alerts: a session waits for you, a limit started over
@@ -38,6 +41,7 @@ final class AppModel {
         every(1) { [self] in now = Date() }
         every(0.5) { [self] in if alertWaiting || alertCelebrating { alertTick += 1 } }
         every(600) { [self] in scene.refreshWeather() }
+        every(900) { [self] in refreshProjects() }
         // After the Mac wakes up a probe that was running got no answer: ask again instead of waiting for the next tick.
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self?.refreshUsage() } }
@@ -81,7 +85,17 @@ final class AppModel {
         }
     }
 
-    func refreshProjects(force: Bool = false) {}     // ponytail: no Codex project scanner yet
+    /// Reads the rollout files of the last 7 days in the background. Only when the details are open: it is the costly part.
+    func refreshProjects(force: Bool = false) {
+        guard !DevFlags.demo, !scanning,
+              force || (UserDefaults.standard.bool(forKey: "detailsOpen") && Date().timeIntervalSince(scannedAt) > 600) else { return }
+        scanning = true
+        let scanner = scanner
+        Task.detached(priority: .utility) {
+            let r = scanner.scan(since: Date().addingTimeInterval(-7 * 86400))
+            await MainActor.run { self.projects = r; self.scannedAt = Date(); self.scanning = false }
+        }
+    }
 
     /// The sky's hover text, in the chosen language.
     var skyTip: String {
@@ -162,6 +176,13 @@ final class AppModel {
             m -= 7
         }
         history = h
+        let hr = Int(t.timeIntervalSince1970 / 3600)
+        projects = ProjectUsage(hourly: [hr - 2: ["web-app": ["gpt-5.1-codex": 40, "gpt-5.1-codex-mini": 3], "docs": ["gpt-5.1-codex": 11]],
+                                         hr - 30: ["web-app": ["gpt-5.1-codex": 10], "api-server": ["gpt-5.1-codex-max": 18]],
+                                         hr - 50: ["api-server": ["gpt-5.1-codex": 10]]],
+                                paths: ["web-app": "~/code/web-app", "api-server": "~/code/api-server", "docs": "~/code/docs"],
+                                turns: [hr - 2: 14, hr - 30: 9, hr - 50: 5],
+                                threads: ["a": hr - 2, "b": hr - 2, "c": hr - 30, "d": hr - 50])
         scene.skySim.weather = Weather(code: 2, temp: 22, wind: 14, sunrise: 6 * 60 + 5, sunset: 18 * 60 + 40, at: t)
         scene.skySim.lat = 38.7; scene.lon = -9.1
         scene.clock = Calendar.current.date(bySettingHour: Int(ProcessInfo.processInfo.environment["CODEXY_DEMO_HOUR"] ?? "") ?? 14,

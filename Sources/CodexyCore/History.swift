@@ -2,7 +2,7 @@ import Foundation
 
 // Two things for the "last 7 days" part of the panel (ported from lib/history.ps1):
 //  - the history of the 5h and week percentages, one sample per limits read;
-//  - which projects spent the most (model only: Codexy has no scanner for it yet).
+//  - which projects and models spent the most, counted from Codex's rollout files (`RolloutScanner`, Projects.swift).
 
 // MARK: percentages over time
 
@@ -71,15 +71,22 @@ public struct UsageHistory: Equatable, Sendable {
     public func save() { try? encoded().write(to: Self.fileURL, options: .atomic) }
 }
 
-// MARK: projects, from the transcripts
+// MARK: projects, from the rollout files
 
 public struct ProjectUsage: Equatable, Sendable {
     /// unix hour -> project -> model family -> weight. Everything below is a sum over this.
     public var hourly: [Int: [String: [String: Double]]] = [:]
     public var paths: [String: String] = [:]            // project -> folder, for the hover text
-    public init(hourly: [Int: [String: [String: Double]]] = [:], paths: [String: String] = [:]) {
-        self.hourly = hourly; self.paths = paths
+    public var turns: [Int: Int] = [:]                  // unix hour -> turns started (a prompt and the work it led to)
+    public var threads: [String: Int] = [:]             // thread id -> last unix hour it was used
+    public init(hourly: [Int: [String: [String: Double]]] = [:], paths: [String: String] = [:],
+                turns: [Int: Int] = [:], threads: [String: Int] = [:]) {
+        self.hourly = hourly; self.paths = paths; self.turns = turns; self.threads = threads
     }
+
+    public func turnCount(sinceHour: Int = .min) -> Int { turns.filter { $0.key >= sinceHour }.values.reduce(0, +) }
+    /// Threads used at least once in the period.
+    public func sessionCount(sinceHour: Int = .min) -> Int { threads.values.filter { $0 >= sinceHour }.count }
 
     private func rows(since: Int) -> [(hour: Int, project: String, family: String, w: Double)] {
         hourly.filter { $0.key >= since }.flatMap { h, ps in ps.flatMap { p, fs in fs.map { (h, p, $0.key, $0.value) } } }
@@ -146,5 +153,3 @@ public struct ProjectUsage: Equatable, Sendable {
         hourly[hour]?.max { $0.value.values.reduce(0, +) < $1.value.values.reduce(0, +) }?.key
     }
 }
-
-// ponytail: no Codex project scanner yet; ProjectUsage stays as the model the heatmap and export draw.
