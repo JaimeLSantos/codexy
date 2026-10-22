@@ -43,7 +43,7 @@ enum Skins {
 /// Clawd is not in the list (he is Anthropic's): he is drawn only when no pet file loads, or with CODEXY_PET=clawd.
 enum Pets {
     nonisolated(unsafe) private static var cache: [Pet]?
-    static let order = ["heeler", "bit", "owl", "book"]
+    static let order = ["theo", "bit", "owl", "book"]
 
     static func reload() { cache = nil }
 
@@ -67,8 +67,9 @@ enum Pets {
     /// nil means Clawd.
     static func current() -> Pet? {
         let id = (ProcessInfo.processInfo.environment["CODEXY_PET"] ?? Prefs.shared.pet).lowercased()
+        let wanted = id == "heeler" ? "theo" : id        // the first name of Theo, still in older settings
         if id == "clawd" { return nil }
-        return all().first { $0.id == id } ?? all().first
+        return all().first { $0.id == wanted } ?? all().first
     }
 
     /// Low use: the slack face; near the limit or sweating: crit; eyes closed: sleep.

@@ -64,7 +64,7 @@ final class Prefs: @unchecked Sendable {
     var theme: String { didSet { d.set(theme, forKey: "theme"); refreshPalette() } }
     var accent: String { didSet { d.set(accent, forKey: "accent"); refreshPalette() } }   // "" = the theme's own
     var skin: String { didSet { d.set(skin, forKey: "skin") } }
-    var pet: String { didSet { d.set(pet, forKey: "pet") } }                          // a file in pets/, heeler by default
+    var pet: String { didSet { d.set(pet, forKey: "pet") } }                          // a file in pets/, theo by default
     var barStyle: String { didSet { d.set(barStyle, forKey: "barStyle") } }          // bars, barsNumbers, numbers
     var showClawd: Bool { didSet { d.set(showClawd, forKey: "showClawd") } }
     var showSky: Bool { didSet { d.set(showSky, forKey: "showSky") } }
@@ -99,7 +99,7 @@ final class Prefs: @unchecked Sendable {
         let t = d.string(forKey: "theme") ?? "classic", a = d.string(forKey: "accent") ?? ""
         theme = t; accent = a
         skin = d.string(forKey: "skin") ?? "classic"
-        pet = d.string(forKey: "pet") ?? "heeler"
+        pet = d.string(forKey: "pet") ?? "theo"
         barStyle = d.string(forKey: "barStyle") ?? "bars"
         showClawd = b("showClawd", true); showSky = b("showSky", true); showSessions = b("showSessions", true)
         showStatus = b("showStatus", true); showAccount = b("showAccount", true); showDetails = b("showDetails", true); showFable = b("showFable", true)

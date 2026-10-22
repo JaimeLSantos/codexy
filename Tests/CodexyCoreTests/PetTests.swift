@@ -38,7 +38,7 @@ final class PetTests: XCTestCase {
     func testBuiltInPetsAreWellFormed() throws {
         let dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../Sources/CodexyUsage/pets")
         let files = try FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil).filter { $0.pathExtension == "txt" }
-        XCTAssertEqual(Set(files.map { $0.deletingPathExtension().lastPathComponent }), ["heeler", "bit", "owl", "book"])
+        XCTAssertEqual(Set(files.map { $0.deletingPathExtension().lastPathComponent }), ["theo", "bit", "owl", "book"])
         for f in files {
             let p = try XCTUnwrap(PetParser.parse(try String(contentsOf: f, encoding: .utf8), id: f.lastPathComponent))
             for (mood, rows) in p.art {

@@ -1,9 +1,9 @@
 ---
-name: Heeler
+name: Theo
 t: #C98A4B
 g: #6E7F96
 s: #A9B8CB
-d: #2B3240
+d: #4F5F78
 k: #141416
 n: #141416
 c: #EBD9B8
