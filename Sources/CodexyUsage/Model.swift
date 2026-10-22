@@ -7,7 +7,7 @@ final class AppModel {
     var usageAt: Date?
     var usageFailed = false
     var usageError = ""
-    /// No Codex session reader yet: stays empty and the panel hides the row.
+    /// Running Codex sessions (CodexSessions: open rollout files), every 5 s.
     var sessions: [AgentSession] = []
     var status: ServiceStatus?
     var statusFailed = false
@@ -23,6 +23,7 @@ final class AppModel {
     var celebrateUntil: Date?
     var alertEarly = false                         // the reset came before its time
     var previewWaitingUntil: Date?
+    @ObservationIgnored private var prevWaiting = 0
     let scene: SceneModel
 
     private var timers: [Timer] = []
@@ -38,6 +39,7 @@ final class AppModel {
             if hot || Date().timeIntervalSince(usageAt ?? .distantPast) >= 55 { refreshUsage() }
         }
         every(1) { [self] in now = Date() }
+        every(5) { [self] in refreshSessions() }
         every(0.5) { [self] in if alertWaiting || alertCelebrating { alertTick += 1 } }
         every(600) { [self] in scene.refreshWeather() }
         every(120) { [self] in refreshStatus() }
@@ -46,7 +48,7 @@ final class AppModel {
             MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self?.refreshUsage(); self?.refreshStatus() } }
         }
         if Prefs.shared.alertsNotifyPace { Notifier.authorize() }     // on by default: ask once, at the first start
-        refreshUsage(); refreshStatus()
+        refreshUsage(); refreshSessions(); refreshStatus()
         // The floating widget comes back where it was left.
         if Prefs.shared.floatOpen, ProcessInfo.processInfo.environment["CODEXY_NO_FLOAT"] == nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [self] in FloatingWidget.shared.show(model: self, animated: false) }
@@ -82,6 +84,28 @@ final class AppModel {
                 }
             }
         }
+    }
+
+    private var scanning = false
+    func refreshSessions() {
+        guard !scanning else { return }
+        scanning = true
+        Task.detached {
+            let s = CodexSessions.list()
+            await MainActor.run {
+                self.scanning = false
+                if s != self.sessions { self.sessions = s; self.scene.observe(model: self); self.sessionsChanged() }
+            }
+        }
+    }
+
+    /// Sessions changed: a newly waiting one is worth a notification (if asked for).
+    private func sessionsChanged() {
+        let waiting = sessions.filter(\.waiting)
+        defer { prevWaiting = waiting.count }
+        guard waiting.count > prevWaiting, Prefs.shared.alertsNotifyWaiting, persist, let s = waiting.first else { return }
+        let where_ = [Redact.name(s.git?.repo ?? s.name, "project"), s.git.map { Redact.name($0.branch, "branch") }].compactMap { $0 }.joined(separator: " · ")
+        Notifier.post(L.t("notify.waiting"), where_)
     }
 
     /// status.openai.com, every 2 minutes.
@@ -182,6 +206,14 @@ final class AppModel {
             m -= 7
         }
         history = h
+        sessions = [
+            AgentSession(pid: 1, name: "web-app", cwd: "/demo/web-app", busy: true, waiting: false,
+                         git: GitInfo(repo: "web-app", branch: "main", worktree: nil), thread: "demo-1"),
+            AgentSession(pid: 2, name: "api", cwd: "/demo/api", busy: false, waiting: true,
+                         git: GitInfo(repo: "api", branch: "fix-login", worktree: "api-fix"), thread: "demo-2"),
+            AgentSession(pid: 2, name: "docs", cwd: "/demo/docs", busy: false, waiting: false,
+                         git: GitInfo(repo: "docs", branch: "main", worktree: nil), thread: "demo-3"),
+        ]
         scene.skySim.weather = Weather(code: 2, temp: 22, wind: 14, sunrise: 6 * 60 + 5, sunset: 18 * 60 + 40, at: t)
         scene.skySim.lat = 38.7; scene.lon = -9.1
         scene.clock = Calendar.current.date(bySettingHour: Int(ProcessInfo.processInfo.environment["CODEXY_DEMO_HOUR"] ?? "") ?? 14,
