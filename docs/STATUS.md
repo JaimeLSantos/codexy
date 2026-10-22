@@ -19,4 +19,4 @@
 - Decide how often to start `codex app-server` (now once a minute, a fresh process each time) or keep one running.
 - Show credits / reset-credit counts the app-server returns (`credits`, `rateLimitResetCredits`).
 - Codex sessions list (from `session_index.jsonl` or the app-server's thread APIs), then projects from the rollout files.
-- Remote, release script, Homebrew cask.
+- Release script, Homebrew cask.

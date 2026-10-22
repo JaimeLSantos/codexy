@@ -42,4 +42,4 @@ Other dev modes and env vars are the same as Claudy's, with `CODEXY_` instead of
 Never hard-code a user-facing string: add it to `Strings.swift` in en and pt (`L.t("key")`).
 
 ## Routine
-Git identity is not configured on this Mac: commit with `git -c user.name="Julio Bianco" -c user.email=julio.bellon@gmail.com` and the Co-Authored-By line. No remote yet.
+Git identity is not configured on this Mac: commit with `git -c user.name=... -c user.email=...` for the project owner, with the Co-Authored-By line. Remote: github.com/juliobianco/codexy (public). Never force-push.
