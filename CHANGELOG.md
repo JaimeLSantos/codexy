@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.1.0] - 2026-10-22
 ### Added
 - First version, built from Claudy Usage: Codex 5h and weekly limits in the menu bar and the panel.
 - Reads `codex app-server` (`account/rateLimits/read`), with the newest session file in `~/.codex/sessions` as fallback.

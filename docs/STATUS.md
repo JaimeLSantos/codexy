@@ -1,6 +1,6 @@
 # Status
 
-Last review: 2026-10-22. `main` has PRs #1 (running sessions), #2 (status and credits), #3 (projects, models, heatmap) and #4 (mascot notes). 57 tests, CI (macOS runner) green on every PR. No open PRs or issues. Nothing released yet: `VERSION` is 0.1.0, no package, no icon, no cask.
+Last review: 2026-10-22. `main` has PRs #1 (running sessions), #2 (status and credits), #3 (projects, models, heatmap) and #4 (mascot notes). 57 tests, CI (macOS runner) green on every PR. No open PRs or issues. Released 0.1.0 on 2026-10-22 (GitHub release + cask `juliobianco/tap/codexy`).
 
 ## Done (0.1.0, unreleased)
 - SwiftPM package `CodexyCore` / `CodexyUsage` / `CodexyCoreTests`, copied from Claudy's provider-neutral code.
