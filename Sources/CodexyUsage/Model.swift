@@ -9,6 +9,8 @@ final class AppModel {
     var usageError = ""
     /// No Codex session reader yet: stays empty and the panel hides the row.
     var sessions: [AgentSession] = []
+    var status: ServiceStatus?
+    var statusFailed = false
     var history = UsageHistory.load()
     /// Snapshots (dev aid) fill the model with made-up data: they must never write it to the real history file.
     @ObservationIgnored var persist = true
@@ -42,12 +44,13 @@ final class AppModel {
         every(0.5) { [self] in if alertWaiting || alertCelebrating { alertTick += 1 } }
         every(600) { [self] in scene.refreshWeather() }
         every(900) { [self] in refreshProjects() }
+        every(120) { [self] in refreshStatus() }
         // After the Mac wakes up a probe that was running got no answer: ask again instead of waiting for the next tick.
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self?.refreshUsage() } }
+            MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self?.refreshUsage(); self?.refreshStatus() } }
         }
         if Prefs.shared.alertsNotifyPace { Notifier.authorize() }     // on by default: ask once, at the first start
-        refreshUsage()
+        refreshUsage(); refreshStatus()
         // The floating widget comes back where it was left.
         if Prefs.shared.floatOpen, ProcessInfo.processInfo.environment["CODEXY_NO_FLOAT"] == nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [self] in FloatingWidget.shared.show(model: self, animated: false) }
@@ -82,6 +85,15 @@ final class AppModel {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 10) { self.refreshUsage() }
                 }
             }
+        }
+    }
+
+    /// status.openai.com, every 2 minutes.
+    func refreshStatus() {
+        Task {
+            let s = await StatusFetcher.fetch()
+            statusFailed = s == nil
+            if let s { status = s }
         }
     }
 
@@ -154,7 +166,15 @@ final class AppModel {
         func at(_ s: TimeInterval) -> Date { t.addingTimeInterval(s) }
         usage = CodexLimits(limits: [CodexLimit(windowMinutes: 300, usedPercent: 42, resetsAt: at(2 * 3600 + 51 * 60)),
                                      CodexLimit(windowMinutes: 10080, usedPercent: 31, resetsAt: at(3 * 86400 + 4 * 3600))],
-                            plan: "plus", source: .appServer, asOf: t)
+                            plan: "plus", source: .appServer, asOf: t,
+                            resetCredits: ResetCredits(available: 1, nextExpiry: at(9 * 86400)))
+        status = ServiceStatus(level: .ok, text: "", detail: [])
+        switch ProcessInfo.processInfo.environment["CODEXY_DEMO_STATUS"] {         // a bad day, for screenshots
+        case "others": status = ServiceStatus(level: .ok, text: "", detail: [], affected: [.init(name: "ChatGPT Work", status: "degraded_performance", important: false)])
+        case "codex": status = ServiceStatus(level: .minor, text: "Elevated errors in Codex", detail: ["Elevated errors in Codex"],
+                                             affected: [.init(name: "CLI", status: "degraded_performance", important: true)])
+        default: break
+        }
         usageAt = t
         if ProcessInfo.processInfo.environment["CODEXY_DEMO_FAIL"] != nil {     // the warning of a failing read, for screenshots
             usageAt = t.addingTimeInterval(-14 * 60); usageFailed = true; usageError = "timed out after 45 s"; failStreak = 3

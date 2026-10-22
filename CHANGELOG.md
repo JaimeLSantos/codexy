@@ -8,3 +8,6 @@
 - Theo walks in side view (two steps, turning with the direction) and sits after a few seconds standing still, also while a session waits for you.
 - Plan name in the panel footer; a note when the numbers come from a session file.
 - Details: turns and sessions, projects (click one for its models and busiest hours), models and the "When you use it" heatmap, for 24 hours or 7 days. Counted on this Mac from Codex's own session files; no conversation text is read.
+- OpenAI status in the panel and the floating card, Codex only: the components of the "Codex" group on status.openai.com set the dot; other OpenAI services being off is mentioned, not alarmed. A click opens the page. Switch in Settings → Look.
+- Reset credits and paid credits under the week row, when Codex reports any (`rateLimitResetCredits`, `rateLimits.credits`): how many, and when the next one expires. Read-only: Codexy never redeems one.
+- CI on a macOS runner: `swift build` and `swift test` on every pull request.
