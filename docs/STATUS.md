@@ -22,7 +22,6 @@ Done:
 Pending:
 - Side views (walk and sit) for Bit, Coruja and Livrinho: they walk facing forward.
 - Accessories (skins) are hidden: they are drawn for Clawd's head. Redraw them for the new heads (or give each pet file a head anchor), then show them again.
-- App icon with Theo (`Resources/AppIcon.icns`) and README pictures.
 - Clawd stays only in dev mode (`CODEXY_PET=clawd`): he is Anthropic's character and is not in the picker.
 
 ## Running sessions (`CodexSessions.swift`)
@@ -35,11 +34,16 @@ Pending:
 - Usage profile (context size, skills, MCP) and the token stats window: Claude-only reports, no Codex counterpart. A tokens-per-day window could be built from the same rollout scan.
 - CLI version/update row: removed (Claudy read `claude --version` and ran `claude update`). Status is back, from OpenAI.
 - Settings: the Claude Code settings editor tab is gone. The Fable toggle is gone (status is back); "Running sessions" and "Plan and account" toggles stay.
-- `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
+- `Strings.swift`: the Claudy keys for removed features are gone (profile, tokens window, Fable, changes). Keys the tokens window needs are written again when it is built.
 
 ## Checked live vs not checked (as of 2026-10-22, codex-cli 0.163.0, Plus plan)
 - Checked on the owner's Mac: limits from `app-server`; sessions list with a TUI open (1 session, idle, named by its thread title); Details with a real week (turns, sessions, projects, models, heatmap filled).
 - Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path of the project scan (only with sample data: every file of the last 7 days was plain `.jsonl`); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
+
+## Done after the review (branch `claude/extra-limits-version`, not merged)
+- Extra limits (`ExtraLimit`, `reachedType` in `Usage.swift`; `ExtraLimitsLine` in `StatusUI.swift`). Real answer checked 2026-10-22 on Plus: `rateLimitsByLimitId` has only `codex`, `rateLimitReachedType` and `individualLimit` are null, `spendControlReached` false (not read). The extra-bucket and reached lines are tested with fixtures only.
+- Distribution pieces: app icon with Theo (`scripts/make-icon.sh`, `Resources/AppIcon.icns`), `scripts/package.sh` (universal zip + sha256, tested: `x86_64 arm64`), README with pictures from `CODEXY_DEMO=1 ... -language en --readme docs/images` (made-up data). Still to do: release 0.1.0 on GitHub and the cask (both outward, need the owner's go).
+- Codex version (`Version.swift`): `codex --version` plus GitHub `releases/latest` (tag `rust-v0.163.0`), every 6 h, in the Details footer.
 
 ## Pending
 Checks (cheap, no code unless they fail):
@@ -48,13 +52,10 @@ Checks (cheap, no code unless they fail):
 - Project weights: compare a few hours of the scan with how much the 5h bar moved.
 
 Limits and data:
-- Extra limits from `account/rateLimits/read`: `rateLimitsByLimitId` (per-model or per-feature buckets) and `rateLimitReachedType` (which limit stopped you). Not read yet; check the shape in codex-rs `app-server-protocol` v2 and with a real answer before showing them.
-- `codex --version` and an update notice (Claudy had a version row and ran `claude update`; for Codex, show only, with a link or the command, never run it by itself).
 - Tokens window: tokens per day / per model from the same rollout scan (Claudy's token stats window has no Codex source otherwise).
-- Keep one `codex app-server` running instead of a fresh process every minute (cost vs simplicity: decide after measuring the spawn).
+- Keep one `codex app-server` running: measured 2026-10-22, one probe costs ~0.4 s of CPU a minute (about 0.7% of a core). Decided to keep the fresh process per probe; revisit only if it shows up in battery use.
 - Exact "waiting": opt-in Codex `PermissionRequest`/`Stop` hook or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`).
 - `~/.codex/config.toml` editor (like Claudy's `settings.json` tab): read-only view first; any write only after a click, keeping comments and order.
-- Prune the Claudy keys left in `Strings.swift`.
 
 Mascot: see the Mascot section (side poses for Bit, Coruja and Livrinho; accessories; app icon with Theo).
 
@@ -68,7 +69,5 @@ Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}`
 
 ## Next (proposed order for 2026-10-23)
 1. The three checks above (waiting with approvals, desktop app, weights): they decide whether sessions and Details need fixes before a release.
-2. Extra limits (`rateLimitsByLimitId`, `rateLimitReachedType`): the limits are the core of the app.
-3. Codex version + update notice.
-4. Distribution: icon with Theo, `package.sh`, release 0.1.0, cask.
-5. Then: tokens window, `config.toml` editor, side poses and accessories, long-lived app-server.
+2. Release 0.1.0 and the cask (icon, package.sh and README are done).
+3. Then: tokens window, `config.toml` editor, side poses and accessories, long-lived app-server.

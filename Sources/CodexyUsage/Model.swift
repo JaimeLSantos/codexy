@@ -11,6 +11,8 @@ final class AppModel {
     var sessions: [AgentSession] = []
     var status: ServiceStatus?
     var statusFailed = false
+    var codexVersion: String?
+    var codexLatest: String?
     var history = UsageHistory.load()
     /// Snapshots (dev aid) fill the model with made-up data: they must never write it to the real history file.
     @ObservationIgnored var persist = true
@@ -47,12 +49,13 @@ final class AppModel {
         every(600) { [self] in scene.refreshWeather() }
         every(900) { [self] in refreshProjects() }
         every(120) { [self] in refreshStatus() }
+        every(6 * 3600) { [self] in refreshVersion() }
         // After the Mac wakes up a probe that was running got no answer: ask again instead of waiting for the next tick.
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 5) { self?.refreshUsage(); self?.refreshStatus() } }
         }
         if Prefs.shared.alertsNotifyPace { Notifier.authorize() }     // on by default: ask once, at the first start
-        refreshUsage(); refreshSessions(); refreshStatus()
+        refreshUsage(); refreshSessions(); refreshStatus(); refreshVersion()
         // The floating widget comes back where it was left.
         if Prefs.shared.floatOpen, ProcessInfo.processInfo.environment["CODEXY_NO_FLOAT"] == nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [self] in FloatingWidget.shared.show(model: self, animated: false) }
@@ -110,6 +113,21 @@ final class AppModel {
         guard waiting.count > prevWaiting, Prefs.shared.alertsNotifyWaiting, persist, let s = waiting.first else { return }
         let where_ = [Redact.name(s.git?.repo ?? s.name, "project"), s.git.map { Redact.name($0.branch, "branch") }].compactMap { $0 }.joined(separator: " · ")
         Notifier.post(L.t("notify.waiting"), where_)
+    }
+
+    /// `codex --version` and the newest GitHub release, every 6 hours.
+    func refreshVersion() {
+        Task {
+            codexVersion = await Task.detached { CodexVersion.installed() }.value
+            codexLatest = await CodexVersion.latest()
+        }
+    }
+
+    /// "Codex 0.163.0", plus "· 0.170.0 available" when GitHub has a newer release.
+    var versionText: String? {
+        guard let v = codexVersion else { return nil }
+        if let n = codexLatest, CodexVersion.isNewer(n, than: v) { return L.t("version.update", v, n) }
+        return "Codex \(v)"
     }
 
     /// status.openai.com, every 2 minutes.

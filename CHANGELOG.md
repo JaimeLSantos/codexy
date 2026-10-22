@@ -11,6 +11,9 @@
 - Running Codex sessions in the panel (project, branch / worktree, working / waiting for you / idle), the blinking "?" and the optional notification when one waits for you. Read from the rollout files the `codex` processes keep open; "waiting" is inferred, since Codex does not write approval prompts to disk.
 - OpenAI status in the panel and the floating card, Codex only: the components of the "Codex" group on status.openai.com set the dot; other OpenAI services being off is mentioned, not alarmed. A click opens the page. Switch in Settings → Look.
 - Reset credits and paid credits under the week row, when Codex reports any (`rateLimitResetCredits`, `rateLimits.credits`): how many, and when the next one expires. Read-only: Codexy never redeems one.
+- Extra limits: when Codex reports other buckets (`rateLimitsByLimitId`, a model or feature with its own limits) each gets a line under the week row, and `rateLimitReachedType` shows which limit stopped you. Plus plans report only the main bucket today, so this is covered by tests, not yet seen live.
+- Codex version in the Details footer, with "update available" when GitHub's latest release is newer and the command to run in a terminal. Show only: Codexy never updates Codex.
+- App icon with Theo, `scripts/package.sh` (universal ad-hoc signed zip with SHA-256) and a README with pictures.
 - CI on a macOS runner: `swift build` and `swift test` on every pull request.
 
 ### Fixed

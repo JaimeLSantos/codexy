@@ -76,6 +76,21 @@ final class UsageTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(CodexParser.appServer(Data(old.utf8), now: now)).resetCredits)
     }
 
+    func testExtraLimitsAndReached() throws {
+        let line = #"{"id":2,"result":{"rateLimits":{"limitId":"codex","primary":{"usedPercent":100,"windowDurationMins":300,"resetsAt":1792610000},"rateLimitReachedType":"rate_limit_reached"},"rateLimitsByLimitId":{"codex":{"limitId":"codex","primary":{"usedPercent":100,"windowDurationMins":300,"resetsAt":1792610000}},"spark":{"limitId":"spark","limitName":"GPT-Spark","primary":{"usedPercent":12,"windowDurationMins":300,"resetsAt":1792610000},"secondary":{"usedPercent":3,"windowDurationMins":10080,"resetsAt":1793000000}}}}}"#
+        let l = try XCTUnwrap(CodexParser.appServer(Data(line.utf8), now: now))
+        XCTAssertEqual(l.reachedType, "rate_limit_reached")
+        XCTAssertEqual(l.extras.map(\.name), ["GPT-Spark"])
+        XCTAssertEqual(l.extras.first?.week?.percent, 3)
+    }
+
+    func testVersion() {
+        XCTAssertEqual(CodexVersion.parse("codex-cli 0.163.0\n"), "0.163.0")
+        XCTAssertEqual(CodexVersion.parse("rust-v0.170.1"), "0.170.1")
+        XCTAssertTrue(CodexVersion.isNewer("0.170.0", than: "0.163.2"))
+        XCTAssertFalse(CodexVersion.isNewer("0.163.0", than: "0.163.0"))
+    }
+
     func testSessionFileCredits() throws {
         let text = #"{"timestamp":"2026-10-19T14:02:00.000Z","type":"event_msg","payload":{"type":"token_count","rate_limits":{"primary":{"used_percent":12.0,"window_minutes":300,"resets_at":1792610000},"credits":{"has_credits":true,"unlimited":true,"balance":null},"plan_type":"plus"}}}"#
         let l = try XCTUnwrap(CodexParser.sessionFile(text, now: now))
