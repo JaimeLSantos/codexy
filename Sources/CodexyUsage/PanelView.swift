@@ -219,23 +219,26 @@ struct SessionRow: View {
     private var state: String { s.busy ? L.t("working") : s.waiting ? L.t("waitingForYou") : L.t("idle") }
 }
 
-// MARK: details: the limits chart, 24 hours or the week of the quota
-// ponytail: Claudy's usage profile, projects, models and heatmap are left out until Codexy has a reader for them.
+// MARK: details: 24 hours or 7 days: turns and sessions, the limits chart, projects, models, the heatmap
+// ponytail: Claudy's usage profile (context size, skills, MCP) comes from Claude's /usage; Codex has no such report.
 struct DetailsView: View {
     let model: AppModel
     @AppStorage("period") private var period = "day"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 11) {
-            T.rule.frame(height: 1)
+            T.rule.frame(height: 1).onAppear { model.refreshProjects(force: true) }
             HStack(spacing: 6) {
                 pill(L.t("period.day"), "day"); pill(L.t("period.week"), "week")
                 Spacer()
+                Text(L.t("thisComputer")).font(.system(size: 9.5)).foregroundStyle(T.faint).help(L.t("thisComputer.tip"))
             }
+            ActivityStats(model: model, period: period)
             VStack(alignment: .leading, spacing: 6) {
                 Text(period == "day" ? L.t("limits.day") : L.t("limits.week")).font(.system(size: 9.5, weight: .semibold)).foregroundStyle(T.dim)
                 HistoryChart(model: model, mode: period == "day" ? .day : .week)
             }
+            ActivityView(model: model, period: period)
         }
     }
 

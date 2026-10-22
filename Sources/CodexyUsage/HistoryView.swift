@@ -230,7 +230,7 @@ struct HistoryChart: View {
             if s.session >= 0 { parts.append("\(L.t("hist.5h")) \(s.session)%") }
             if s.week >= 0 { parts.append("\(L.t("hist.week")) \(s.week)%") }
         } else { parts.append(L.t("noData")) }
-        if let p = model.projects?.busiest(hour: t / 60) { parts.append(p) }
+        if let p = model.projects?.busiest(hour: t / 60) { parts.append(Redact.name(p, "project")) }
         return parts.joined(separator: " · ")
     }
 
