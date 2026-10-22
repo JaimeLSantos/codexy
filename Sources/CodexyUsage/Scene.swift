@@ -139,9 +139,9 @@ final class SceneModel {
         i.sessions = model.sessions.count
         i.busy = model.sessions.filter(\.busy).count
         i.waiting = model.sessions.filter(\.waiting).count
-        i.sessionPct = model.usage?.session?.percent
+        i.sessionPct = model.top?.percent           // the week when there is no 5h window
         pct = i.sessionPct
-        i.sessionReset = model.usage?.session?.reset
+        i.sessionReset = model.top?.reset
         clawd.observe(i)
     }
 
@@ -202,10 +202,11 @@ struct HeroView: View {
                                              startPoint: .leading, endPoint: .trailing))
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(model.usage?.session.map { "\($0.percent)" } ?? "--")
+                    Text(model.top.map { "\($0.percent)" } ?? "--")
                         .font(.system(size: 34, weight: .light))
-                        .foregroundStyle(model.usage?.session.map { T.level($0.percent) } ?? T.muted)
+                        .foregroundStyle(model.top.map { T.level($0.percent) } ?? T.muted)
                     Text("%").font(.system(size: 15)).foregroundStyle(T.muted).baselineOffset(10)
+                    if model.topIsWeek { Text(L.t("week")).font(.system(size: 10, weight: .semibold)).foregroundStyle(T.dim).padding(.leading, 4) }
                 }
                 .allowsHitTesting(false)
             }

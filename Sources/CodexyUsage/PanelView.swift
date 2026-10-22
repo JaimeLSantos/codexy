@@ -16,9 +16,12 @@ struct PanelView: View {
             hero
             resetLine
             HealthLine(model: model).padding(.top, 6)
-            LimitRow(model: model, title: L.t("week"), line: model.usage?.week, color: T.accent, pace: model.weekPaceText).padding(.top, 9)
+            if !model.topIsWeek {
+                LimitRow(model: model, title: L.t("week"), line: model.usage?.week, color: T.accent, pace: model.weekPaceText).padding(.top, 9)
+            }
             ExtraLimitsLine(model: model).padding(.top, 6)
             CreditsLine(model: model).padding(.top, 6)
+            ResetsLine(model: model).padding(.top, 9)
             if prefs.showSessions, !model.sessions.isEmpty { sessionsRow.padding(.top, 11) }
             if prefs.showStatus { StatusRow(model: model).padding(.top, 10) }
             if detailsOpen && prefs.showDetails { DetailsView(model: model).padding(.top, 12) }
@@ -40,7 +43,7 @@ struct PanelView: View {
             if model.alertWaiting || model.alertCelebrating { AlertBadge(model: model) }
             else { Text(L.t("app.title")).font(.system(size: 10.5, weight: .semibold)).foregroundStyle(T.muted) }
             Spacer()
-            if let p = model.usage?.session?.percent {
+            if let p = model.top?.percent {
                 HeartsView(halves: Format.heartHalves(sessionPercent: p)).padding(.trailing, 12)
             }
             iconButton("pin", help: L.t("float.pin")) {
@@ -72,14 +75,14 @@ struct PanelView: View {
                 .help(prefs.showSky ? model.skyTip : "")
                 .onAppear { model.scene.start() }
                 .onDisappear { model.scene.stop() }
-            ProgressBar(percent: model.usage?.session?.percent, height: 7, color: model.usage?.session.map { T.level($0.percent) } ?? T.ok)
+            ProgressBar(percent: model.top?.percent, height: 7, color: model.top.map { T.level($0.percent) } ?? T.ok)
         }
     }
 
     private var resetLine: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(model.resetText).font(.system(size: 12)).foregroundStyle(T.text2)
-            if let p = model.sessionPaceText { Text(p).font(.system(size: 10)).foregroundStyle(T.dim) }
+            if let p = model.topPaceText { Text(p).font(.system(size: 10)).foregroundStyle(T.dim) }
         }.padding(.top, 8)
     }
 

@@ -119,8 +119,12 @@ struct MiniBars: View {
                     .opacity(tick % 2 == 0 ? 1 : 0.3)
             }
             VStack(alignment: .leading, spacing: 1.5) {
-                row("5h", session)
-                row("W", week)
+                if session == nil, let week {          // only a weekly limit (Plus, today): one row, with its number
+                    row("W", week, number: true)
+                } else {
+                    row("5h", session)
+                    row("W", week)
+                }
             }
             .opacity(stale ? 0.55 : 1)
             .overlay { if celebrating { Confetti(tick: tick) } }
@@ -129,7 +133,7 @@ struct MiniBars: View {
         .frame(height: 18)
     }
 
-    private func row(_ label: String, _ pct: Int?) -> some View {
+    private func row(_ label: String, _ pct: Int?, number: Bool = false) -> some View {
         HStack(spacing: 3) {
             Text(label)
                 .font(.system(size: 7.5, weight: .bold, design: .rounded))
@@ -143,7 +147,7 @@ struct MiniBars: View {
                     }
                 }
             }
-            if style != "bars" {
+            if style != "bars" || number {
                 Text(pct.map { "\($0)%" } ?? "--")
                     .font(.system(size: 8, weight: .semibold, design: .rounded)).monospacedDigit()
                     .foregroundStyle(pct.map { T.level($0) } ?? Color.white.opacity(0.6))
