@@ -1,18 +1,19 @@
 import Foundation
 
-// A running agent session and the git checkout it works in. Codexy has no session registry
-// reader for Codex yet, so the list stays empty and the panel hides it; the git reader is ready.
+// A running agent session and the git checkout it works in. Codex sessions come from CodexSessions.
 
 public struct AgentSession: Equatable, Sendable, Identifiable {
-    public var id: Int32 { pid }
+    /// One process can hold several threads (the app-server of the Codex app), so the thread id names a session.
+    public var id: String { thread.isEmpty ? "pid:\(pid)" : thread }
     public var pid: Int32
     public var name: String
     public var cwd: String
     public var busy: Bool
     public var waiting: Bool
     public var git: GitInfo?
-    public init(pid: Int32, name: String, cwd: String, busy: Bool, waiting: Bool, git: GitInfo?) {
-        self.pid = pid; self.name = name; self.cwd = cwd; self.busy = busy; self.waiting = waiting; self.git = git
+    public var thread: String
+    public init(pid: Int32, name: String, cwd: String, busy: Bool, waiting: Bool, git: GitInfo?, thread: String = "") {
+        self.pid = pid; self.name = name; self.cwd = cwd; self.busy = busy; self.waiting = waiting; self.git = git; self.thread = thread
     }
 }
 
