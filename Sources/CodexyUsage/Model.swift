@@ -17,7 +17,7 @@ final class AppModel {
     /// Projects, models and turns of the last 7 days, from Codex's rollout files. nil until the first scan.
     var projects: ProjectUsage?
     @ObservationIgnored private let scanner = RolloutScanner()
-    @ObservationIgnored private var scanning = false
+    @ObservationIgnored private var scanningProjects = false
     @ObservationIgnored private var scannedAt = Date.distantPast
     var now = Date()
     private var failStreak = 0
@@ -123,13 +123,13 @@ final class AppModel {
 
     /// Reads the rollout files of the last 7 days in the background. Only when the details are open: it is the costly part.
     func refreshProjects(force: Bool = false) {
-        guard !DevFlags.demo, !scanning,
+        guard !DevFlags.demo, !scanningProjects,
               force || (UserDefaults.standard.bool(forKey: "detailsOpen") && Date().timeIntervalSince(scannedAt) > 600) else { return }
-        scanning = true
+        scanningProjects = true
         let scanner = scanner
         Task.detached(priority: .utility) {
             let r = scanner.scan(since: Date().addingTimeInterval(-7 * 86400))
-            await MainActor.run { self.projects = r; self.scannedAt = Date(); self.scanning = false }
+            await MainActor.run { self.projects = r; self.scannedAt = Date(); self.scanningProjects = false }
         }
     }
 
