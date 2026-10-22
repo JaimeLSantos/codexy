@@ -44,7 +44,7 @@ struct PanelView: View {
         HeroView(scene: model.scene, model: model)
             .help(prefs.showSky ? model.skyTip : "")
             // The menu bar keeps this view alive while the panel is closed: animate only while it is on screen.
-            .background(WindowVisibility { $0 ? model.scene.start() : model.scene.stop() })
+            .background { if !DevFlags.offscreen { WindowVisibility { $0 ? model.scene.start() : model.scene.stop() } } }
     }
 
     // MARK: worktrees by what they do

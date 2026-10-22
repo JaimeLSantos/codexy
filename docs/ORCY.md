@@ -5,6 +5,13 @@ A pixel orca shows how many agents work (▶) and how many wait for you (?, blin
 **Waiting for you**, **Running** and **Stopped**, with branch, agent and for how long, then today (tasks done and failed,
 agents, agent time) and the last 7 days.
 
+<p align="center">
+  <img src="images/orcy-panel.png" width="300" alt="Orcy panel with demo data: one agent waiting, two running, today and the last 7 days">
+  <img src="images/orcy-bar.png" alt="Orcy in the menu bar: the orca, ?1 waiting and ▶2 working">
+</p>
+
+Pictures use made-up data (`ORCY_DEMO=1`).
+
 It shares the mascot brain, the pet format, the sky and the formatting with Codexy (`CodexyCore`); `OrcyCore` holds only
 the Orca readers. The UI target is a trimmed copy of `CodexyUsage` (see "Toward one package" below).
 
