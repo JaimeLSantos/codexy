@@ -1,8 +1,10 @@
 # Status
 
+Last review: 2026-10-22. `main` has PRs #1 (running sessions), #2 (status and credits), #3 (projects, models, heatmap) and #4 (mascot notes). 57 tests, CI (macOS runner) green on every PR. No open PRs or issues. Nothing released yet: `VERSION` is 0.1.0, no package, no icon, no cask.
+
 ## Done (0.1.0, unreleased)
 - SwiftPM package `CodexyCore` / `CodexyUsage` / `CodexyCoreTests`, copied from Claudy's provider-neutral code.
-- Codex reader (`Usage.swift`): `codex app-server` → `account/rateLimits/read`; fallback to the last `token_count` event of the newest rollout file (plain or `.zst`). Tests with anonymised fixtures (28 tests green).
+- Codex reader (`Usage.swift`): `codex app-server` → `account/rateLimits/read`; fallback to the last `token_count` event of the newest rollout file (plain or `.zst`). Tests with anonymised fixtures.
 - Panel: 5h hero + bar, reset time, pace, week row, plan in the footer, 24h / week chart. Menu bar: two mini bars 5h / W.
 - Own bundle id, data folder, log and defaults domain (`dev.julio.codexy`, `Application Support/Codexy`, `Logs/Codexy.log`).
 - Details: turns and sessions, projects (click for models and busiest hours), models and the "When you use it" heatmap, 24 h or 7 days. `RolloutScanner` (`Projects.swift`) reads `~/.codex/sessions` and `archived_sessions` (`.jsonl` from where it stopped, `.jsonl.zst` once with `zstd`) and parses only `session_meta`, `turn_context` and `token_count` lines, picked by their first bytes. Tokens are the growth of the running totals; a fork's copy of its parent is skipped (same totals, same turn ids, its first seconds, its first count). Weight = fresh input + 0.1 × cached + 8 × output, × 0.2 for mini and 0.04 for nano models: an estimate, OpenAI does not say how each model counts against the plan. Scanned when Details opens, then every 15 min while it stays open. Export writes `codexy-projects.csv` again.
@@ -35,9 +37,38 @@ Pending:
 - Settings: the Claude Code settings editor tab is gone. The Fable toggle is gone (status is back); "Running sessions" and "Plan and account" toggles stay.
 - `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
 
-## Next
-- Mascot: see the Mascot section above.
-- Decide how often to start `codex app-server` (now once a minute, a fresh process each time) or keep one running.
-- Check the project weights against a real week: whether the mini/nano factors and the 8x output weight match how fast the 5h bar moves.
-- Sessions, exact "waiting": an opt-in Codex `PermissionRequest`/`Stop` hook (writes to `~/.codex/config.toml`, so only after a click), or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`) when the user runs it.
-- Release script, Homebrew cask.
+## Checked live vs not checked (as of 2026-10-22, codex-cli 0.163.0, Plus plan)
+- Checked on the owner's Mac: limits from `app-server`; sessions list with a TUI open (1 session, idle, named by its thread title); Details with a real week (turns, sessions, projects, models, heatmap filled).
+- Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path of the project scan (only with sample data: every file of the last 7 days was plain `.jsonl`); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
+
+## Pending
+Checks (cheap, no code unless they fail):
+- "Waiting for you" in a session with approvals on (`codex -a on-request` or similar): does the "?" show, and does it clear after the answer?
+- Codex desktop app sessions: it held no rollout file when checked. Find where its threads live (app-server daemon socket, `state_5.sqlite`?) before deciding to read them.
+- Project weights: compare a few hours of the scan with how much the 5h bar moved.
+
+Limits and data:
+- Extra limits from `account/rateLimits/read`: `rateLimitsByLimitId` (per-model or per-feature buckets) and `rateLimitReachedType` (which limit stopped you). Not read yet; check the shape in codex-rs `app-server-protocol` v2 and with a real answer before showing them.
+- `codex --version` and an update notice (Claudy had a version row and ran `claude update`; for Codex, show only, with a link or the command, never run it by itself).
+- Tokens window: tokens per day / per model from the same rollout scan (Claudy's token stats window has no Codex source otherwise).
+- Keep one `codex app-server` running instead of a fresh process every minute (cost vs simplicity: decide after measuring the spawn).
+- Exact "waiting": opt-in Codex `PermissionRequest`/`Stop` hook or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`).
+- `~/.codex/config.toml` editor (like Claudy's `settings.json` tab): read-only view first; any write only after a click, keeping comments and order.
+- Prune the Claudy keys left in `Strings.swift`.
+
+Mascot: see the Mascot section (side poses for Bit, Coruja and Livrinho; accessories; app icon with Theo).
+
+Distribution:
+- `scripts/package.sh` (universal zip + `.sha256`, ad-hoc signed), app icon (`Resources/AppIcon.icns`, with Theo), README pictures (`CODEXY_DEMO=1`, never real names or paths), first GitHub release, Homebrew cask in `juliobianco/homebrew-tap`. Copy the steps from Claudy's "Release" section.
+
+Later:
+- Claudex: Claude and Codex in one app. Wait until Codexy is released and both readers have settled, then decide between one app with two providers or a shared core package.
+
+Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}` are still on GitHub (can be deleted).
+
+## Next (proposed order for 2026-10-23)
+1. The three checks above (waiting with approvals, desktop app, weights): they decide whether sessions and Details need fixes before a release.
+2. Extra limits (`rateLimitsByLimitId`, `rateLimitReachedType`): the limits are the core of the app.
+3. Codex version + update notice.
+4. Distribution: icon with Theo, `package.sh`, release 0.1.0, cask.
+5. Then: tokens window, `config.toml` editor, side poses and accessories, long-lived app-server.
