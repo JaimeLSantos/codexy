@@ -4,6 +4,7 @@
 - SwiftPM package `CodexyCore` / `CodexyUsage` / `CodexyCoreTests`, copied from Claudy's provider-neutral code.
 - Codex reader (`Usage.swift`): `codex app-server` → `account/rateLimits/read`; fallback to the last `token_count` event of the newest rollout file (plain or `.zst`). Tests with anonymised fixtures (28 tests green).
 - Panel: 5h hero + bar, reset time, pace, week row, plan in the footer, 24h / week chart. Menu bar: two mini bars 5h / W.
+- Mascots: `Pet.swift` + `pets/*.txt` (heeler, bit, owl, book), picker with live preview in Settings → Look, `--pets DIR` renders every mood. Clawd only with `CODEXY_PET=clawd` (dev).
 - Own bundle id, data folder, log and defaults domain (`dev.julio.codexy`, `Application Support/Codexy`, `Logs/Codexy.log`).
 
 ## Hidden or stubbed (the provider data is not wired yet)
@@ -14,7 +15,9 @@
 - `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
 
 ## Next
-- A mascot and art of Codexy's own (Clawd is Anthropic's character, kept only as a placeholder engine).
+- Heeler: refine the pixel map from the owner's dog photo (colours and markings come via the project thread).
+- Accessories (skins) are hidden: they are anchored to Clawd's head. Give each pet file a head anchor, then show them again.
+- Pets face one way: Clawd's turn and look poses are not drawn yet; a mirrored walk would read better.
 - App icon (`Resources/AppIcon.icns`), README pictures.
 - Decide how often to start `codex app-server` (now once a minute, a fresh process each time) or keep one running.
 - Show credits / reset-credit counts the app-server returns (`credits`, `rateLimitResetCredits`).

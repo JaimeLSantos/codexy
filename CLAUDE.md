@@ -8,7 +8,8 @@ Menu bar app that shows OpenAI Codex plan limits (5h and weekly). Built from [Cl
 Status and backlog: `docs/STATUS.md`. Keep it and `CHANGELOG.md` (*Unreleased*) current with every change.
 
 ## Layout
-- `Sources/CodexyCore`: no UI, testable. `Usage.swift` (Codex reader: app-server + session-file fallback, `CodexLimits`), `Sessions.swift` (git reader + neutral `AgentSession`), `History.swift` (5h/week samples), `Pace`, `Alerts`, `Export`, `Format`, `ChartMarks`, `Sky`, `Mascot` + `Clawd` (placeholder mascot engine).
+- `Sources/CodexyCore`: no UI, testable. `Usage.swift` (Codex reader: app-server + session-file fallback, `CodexLimits`), `Sessions.swift` (git reader + neutral `AgentSession`), `History.swift` (5h/week samples), `Pace`, `Alerts`, `Export`, `Format`, `ChartMarks`, `Sky`, `Mascot` (movement brain) + `Clawd` (frame model; Clawd himself is dev-only), `Pet.swift` (mascots from text files).
+- `Sources/CodexyUsage/pets/*.txt`: the four mascots, 18 x 12 grid, moods `[normal] [slack] [crit] [sleep]`. `--pets DIR` renders them all; `CODEXY_PET=<id>` previews one in `--scenes`.
 - `Sources/CodexyUsage`: SwiftUI, same files as Claudy. `Model.swift` polls `CodexCLI.fetchUsage()` once a minute.
 - Data: `~/Library/Application Support/Codexy`, log `~/Library/Logs/Codexy.log`, bundle id `dev.julio.codexy`. Never share files or defaults with Claudy.
 

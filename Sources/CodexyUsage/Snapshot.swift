@@ -75,6 +75,26 @@ enum Snapshot {
         if thenExit { exit(0) }
     }
 
+    /// `--pets DIR`: pets.png, every mascot in each mood, big enough to judge the pixels.
+    static func pets(dir: String) {
+        let moods = ["normal", "slack", "crit", "sleep"]
+        let sheet = VStack(alignment: .leading, spacing: 10) {
+            ForEach(Pets.all(), id: \.id) { p in
+                HStack(spacing: 10) {
+                    Text(p.name).font(.system(size: 11, weight: .semibold)).foregroundStyle(T.text2).frame(width: 70, alignment: .leading)
+                    ForEach(moods, id: \.self) { m in
+                        VStack(spacing: 2) {
+                            PetPreview(pet: p, mood: m).frame(width: 64, height: 40).scaleEffect(1.6).frame(width: 100, height: 64)
+                            Text(m).font(.system(size: 9)).foregroundStyle(T.muted)
+                        }
+                    }
+                }
+            }
+        }.padding(14).background(T.bg)
+        write(sheet, "\(dir)/pets.png")
+        exit(0)
+    }
+
     /// `--settings DIR`: every tab of the settings window as a PNG.
     static func settings(dir: String) {
         let model = AppModel(); model.persist = false

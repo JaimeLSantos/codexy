@@ -12,7 +12,7 @@ struct CodexyApp: App {
            NSRunningApplication.runningApplications(withBundleIdentifier: id).count > 1 { exit(0) }
         // `CodexyUsage --snapshot DIR`: render the panel and the bar label to PNGs (for checking the look), then quit.
         let a = CommandLine.arguments
-        if a.contains(where: { ["--snapshot", "--scenes", "--settings", "--readme", "--gifs", "--banner"].contains($0) }) { DevFlags.offscreen = true }
+        if a.contains(where: { ["--snapshot", "--scenes", "--settings", "--readme", "--gifs", "--banner", "--pets"].contains($0) }) { DevFlags.offscreen = true }
         if !a.contains(where: { $0.hasPrefix("--") }) { LoginItem.enableOnFirstRun() }
         if let i = a.firstIndex(of: "--snapshot"), i + 1 < a.count {
             Snapshot.schedule(dir: a[i + 1])
@@ -51,6 +51,10 @@ struct CodexyApp: App {
         if let i = a.firstIndex(of: "--icon"), i + 1 < a.count {
             let d = a[i + 1]
             DispatchQueue.main.async { MainActor.assumeIsolated { Snapshot.icon(dir: d) } }
+        }
+        if let i = a.firstIndex(of: "--pets"), i + 1 < a.count {
+            let d = a[i + 1]
+            DispatchQueue.main.async { MainActor.assumeIsolated { Snapshot.pets(dir: d) } }
         }
         if let i = a.firstIndex(of: "--scenes"), i + 1 < a.count {
             let d = a[i + 1]

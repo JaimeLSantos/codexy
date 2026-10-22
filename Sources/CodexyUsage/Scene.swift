@@ -39,6 +39,46 @@ enum Skins {
     }
 }
 
+/// Mascots: built in ones ship in the bundle (pets/), your own go to ~/Library/Application Support/Codexy/pets.
+/// Clawd is not in the list (he is Anthropic's): he is drawn only when no pet file loads, or with CODEXY_PET=clawd.
+enum Pets {
+    nonisolated(unsafe) private static var cache: [Pet]?
+    static let order = ["heeler", "bit", "owl", "book"]
+
+    static func reload() { cache = nil }
+
+    static func all() -> [Pet] {
+        if let c = cache { return c }
+        var byId: [String: Pet] = [:]
+        var dirs: [URL] = []
+        if let b = Bundle.module.url(forResource: "pets", withExtension: nil) { dirs.append(b) }
+        dirs.append(URL(fileURLWithPath: NSHomeDirectory() + "/Library/Application Support/Codexy/pets"))
+        for d in dirs {
+            for f in ((try? FileManager.default.contentsOfDirectory(at: d, includingPropertiesForKeys: nil)) ?? []) where f.pathExtension == "txt" {
+                if let raw = try? String(contentsOf: f, encoding: .utf8),
+                   let p = PetParser.parse(raw, id: f.deletingPathExtension().lastPathComponent) { byId[p.id] = p }
+            }
+        }
+        let list = byId.values.sorted { (order.firstIndex(of: $0.id) ?? 99, $0.id) < (order.firstIndex(of: $1.id) ?? 99, $1.id) }
+        cache = list
+        return list
+    }
+
+    /// nil means Clawd.
+    static func current() -> Pet? {
+        let id = (ProcessInfo.processInfo.environment["CODEXY_PET"] ?? Prefs.shared.pet).lowercased()
+        if id == "clawd" { return nil }
+        return all().first { $0.id == id } ?? all().first
+    }
+
+    /// Low use: the slack face; near the limit or sweating: crit; eyes closed: sleep.
+    static func mood(_ m: MascotOut, pct: Int?) -> String {
+        if m.frame.eyes == "closed" { return "sleep" }
+        if m.sweat != nil || (pct ?? 0) >= Prefs.shared.critPercent { return "crit" }
+        return (pct ?? 0) < 25 ? "slack" : "normal"
+    }
+}
+
 /// Drives Clawd and the sky while the panel is open. Mood changes are fed by the model's polling even when closed.
 @MainActor @Observable
 final class SceneModel {
@@ -47,6 +87,8 @@ final class SceneModel {
     /// The chosen skin. Read live from the settings, so picking one there changes Clawd at once.
     @ObservationIgnored var skinOverride: Skin?         // snapshots only
     var skin: Skin { skinOverride ?? Skins.current() }
+    var pet: Pet? { Pets.current() }
+    @ObservationIgnored var pct: Int?               // picks the pet's face
     var size = CGSize(width: 272, height: 56)
     @ObservationIgnored let clawd: Mascot
     @ObservationIgnored let skySim: Sky
@@ -96,6 +138,7 @@ final class SceneModel {
         i.busy = model.sessions.filter(\.busy).count
         i.waiting = model.sessions.filter(\.waiting).count
         i.sessionPct = model.usage?.session?.percent
+        pct = i.sessionPct
         i.sessionReset = model.usage?.session?.reset
         clawd.observe(i)
     }
@@ -116,7 +159,7 @@ final class SceneModel {
         watchers += 1
         guard !running else { return }
         running = true
-        Skins.reload()
+        Skins.reload(); Pets.reload()
         refreshWeather()
         loop()
     }
@@ -175,7 +218,7 @@ struct SceneCanvas: View {
 
     var body: some View {
         let s = SceneModel.scale
-        let m = scene.mascot, sky = scene.sky, skin = scene.skin
+        let m = scene.mascot, sky = scene.sky, skin = scene.skin, pet = scene.pet, pct = scene.pct
         let showSky = Prefs.shared.showSky, showClawd = Prefs.shared.showClawd
         Canvas { ctx, size in
             ctx.scaleBy(x: s, y: s)
@@ -240,11 +283,16 @@ struct SceneCanvas: View {
                     for r in rects { p.addRect(CGRect(x: ox + r.x * px, y: top + r.y * py, width: r.w * px, height: r.h * py)) }
                     l.fill(p, with: .color(c))
                 }
-                f(px4.body, Color(hexString: skin.body))
-                f(px4.eyes, Color(hexString: skin.eyes))
+                if let pet {
+                    for (c, rects) in pet.pixels(Pets.mood(m, pct: pct), frame: m.frame) { f(rects, Color(hexString: c)) }
+                } else {
+                    f(px4.body, Color(hexString: skin.body))
+                    f(px4.eyes, Color(hexString: skin.eyes))
+                }
                 f(px4.fx, Color(hex: 0x6B7280))
                 f(px4.sand, Color(hex: 0xB8955E))
-                for (i, rects) in px4.acc.enumerated() where i < skin.layers.count { f(rects, Color(hexString: skin.layers[i].color)) }
+                // ponytail: accessories are anchored to Clawd's head; pets get them when each pet file says where its head is.
+                if pet == nil { for (i, rects) in px4.acc.enumerated() where i < skin.layers.count { f(rects, Color(hexString: skin.layers[i].color)) } }
             }
 
             // z, sweat, bubble, love, dust, confetti, soul

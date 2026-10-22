@@ -109,6 +109,29 @@ struct ActionButton: View {
 }
 
 /// Clawd on a small card: the skin picker's preview. Under the mouse he raises his arms.
+/// A pet in the settings grid: its normal face, cycling through its moods while hovered.
+struct PetPreview: View {
+    let pet: Pet
+    var hover = false
+    var mood: String?
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 0.8)) { t in
+            let moods = ["normal", "slack", "crit", "sleep"]
+            let m = mood ?? (hover ? moods[Int(t.date.timeIntervalSince1970 / 0.8) % moods.count] : "normal")
+            Canvas { ctx, size in
+                let u = 2.3
+                let ox = (size.width - 18 * u) / 2, oy = (size.height - 12 * u * 1.1) / 2
+                for (c, rects) in pet.pixels(m, frame: ClawdFrame()) {
+                    var p = Path()
+                    for r in rects { p.addRect(CGRect(x: ox + r.x * u, y: oy + r.y * u * 1.1, width: r.w * u, height: r.h * u * 1.1)) }
+                    ctx.fill(p, with: .color(Color(hexString: c)))
+                }
+            }
+        }
+    }
+}
+
 struct ClawdPreview: View {
     let skin: Skin
     var hover = false

@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     targets: [
         .target(name: "CodexyCore"),
-        .executableTarget(name: "CodexyUsage", dependencies: ["CodexyCore"], resources: [.copy("skins")]),
+        .executableTarget(name: "CodexyUsage", dependencies: ["CodexyCore"], resources: [.copy("skins"), .copy("pets")]),
         .testTarget(name: "CodexyCoreTests", dependencies: ["CodexyCore"]),
     ]
 )

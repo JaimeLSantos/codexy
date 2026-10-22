@@ -61,6 +61,7 @@ extension SettingsView {
 struct LookTab: View {
     private var prefs: Prefs { Prefs.shared }
     @State private var skins = Skins.all()
+    @State private var pets = Pets.all()
     @State private var hovered: String?
     private static let accents: [String] = ["#F472B6", "#FB923C", "#FBBF24", "#4ADE80", "#2DD4BF", "#60A5FA", "#A78BFA", "#F87171"]
 
@@ -90,7 +91,18 @@ struct LookTab: View {
                 }
             }
         }
-        group(L.t("set.skin")) {
+        group(L.t("set.pet")) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
+                ForEach(pets, id: \.id) { p in
+                    card(name: p.name, selected: Pets.current()?.id == p.id) {
+                        PetPreview(pet: p, hover: hovered == "pet." + p.id)
+                    } action: { prefs.pet = p.id }
+                    .onHover { hovered = $0 ? "pet." + p.id : (hovered == "pet." + p.id ? nil : hovered) }
+                }
+            }
+        }
+        // Accessories are drawn for Clawd's head: shown only while Clawd is the mascot (dev, CODEXY_PET=clawd).
+        if Pets.current() == nil { group(L.t("set.skin")) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
                 ForEach(skins, id: \.id) { s in
                     card(name: s.id == "classic" ? L.t("skin.classic") : s.name.isEmpty ? s.id : s.name, selected: prefs.skin == s.id) {
@@ -109,6 +121,7 @@ struct LookTab: View {
             }
         }
         .onAppear { Skins.reload(); skins = Skins.all() }
+        }
     }
 
     private func card<C: View>(name: String, selected: Bool, @ViewBuilder preview: () -> C, action: @escaping () -> Void) -> some View {
