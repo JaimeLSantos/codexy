@@ -1,0 +1,14 @@
+name: CI
+# Build and run the core tests on a Mac runner, so changes made away from a Mac are still compiled.
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift build
+      - run: swift test

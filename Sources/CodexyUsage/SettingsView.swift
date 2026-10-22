@@ -198,6 +198,7 @@ struct BarTab: View {
             SwitchRow(label: L.t("show.clawd"), isOn: $prefs.showClawd)
             SwitchRow(label: L.t("show.sky"), isOn: $prefs.showSky)
             SwitchRow(label: L.t("show.sessions"), isOn: $prefs.showSessions)
+            SwitchRow(label: L.t("show.status"), isOn: $prefs.showStatus)
             SwitchRow(label: L.t("show.account"), isOn: $prefs.showAccount)
             SwitchRow(label: L.t("show.details"), isOn: $prefs.showDetails)
         }
