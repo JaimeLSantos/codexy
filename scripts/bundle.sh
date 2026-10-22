@@ -19,7 +19,7 @@ rm -rf "$APP"
 mkdir -p "$(dirname "$APP")" "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$OUT/CodexyUsage" "$APP/Contents/MacOS/CodexyUsage"
 # SwiftPM resources (skins): Bundle.module looks for this next to the executable or in Resources.
-cp -R "$OUT/CodexyUsage_CodexyUsage.bundle" "$APP/Contents/Resources/"
+cp -R "$OUT/Codexy_CodexyUsage.bundle" "$APP/Contents/Resources/"
 [ -f Resources/AppIcon.icns ] && cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

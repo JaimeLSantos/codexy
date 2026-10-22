@@ -36,7 +36,7 @@ Other dev modes and env vars are the same as Claudy's, with `CODEXY_` instead of
 - **Build outside `~/Documents`** (`--scratch-path`): its file provider adds xattrs and `codesign` fails.
 - Snapshots must not write to real files (`AppModel.persist = false`).
 - `MenuBarExtra` drops custom shapes: the mini bars are an `ImageRenderer` bitmap.
-- SwiftPM resources: `bundle.sh` copies `CodexyUsage_CodexyUsage.bundle` into `Contents/Resources`.
+- SwiftPM resources: `bundle.sh` copies `Codexy_CodexyUsage.bundle` (`<package>_<target>`: the package is "Codexy") into `Contents/Resources`.
 - A menu bar app from Finder has a bare PATH: `CodexCLI` looks in `~/.local/bin`, Homebrew and `/usr/local/bin`.
 
 ## Text

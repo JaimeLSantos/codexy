@@ -13,5 +13,8 @@
 - Reset credits and paid credits under the week row, when Codex reports any (`rateLimitResetCredits`, `rateLimits.credits`): how many, and when the next one expires. Read-only: Codexy never redeems one.
 - CI on a macOS runner: `swift build` and `swift test` on every pull request.
 
+### Fixed
+- `scripts/bundle.sh` copied a resource bundle that does not exist (`CodexyUsage_CodexyUsage.bundle`); SwiftPM names it `Codexy_CodexyUsage.bundle` after the package, so the script stopped halfway and the app would not open.
+
 ### Not yet
 - Side views for Bit, Coruja and Livrinho (they walk facing forward); accessories redrawn for the new heads (hidden for now); an app icon with Theo. Clawd, Claudy's crab, is only in dev mode.
