@@ -6,7 +6,7 @@ on:
     branches: [main]
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-26   # Xcode 26 (Swift 6.2), like the dev Mac; Xcode 16 rejects code that builds there
     steps:
       - uses: actions/checkout@v4
       - run: swift --version
