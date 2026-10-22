@@ -1,0 +1,16 @@
+name: CI
+# Build and run the core tests on a Mac runner, so changes made away from a Mac are still compiled.
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: macos-26   # Xcode 26 (Swift 6.2), like the dev Mac; Xcode 16 rejects code that builds there
+    env:
+      TZ: America/Sao_Paulo   # the sun test reads local times for São Paulo, as on the dev Mac
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift build
+      - run: swift test

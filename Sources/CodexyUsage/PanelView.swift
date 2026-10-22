@@ -17,7 +17,9 @@ struct PanelView: View {
             resetLine
             HealthLine(model: model).padding(.top, 6)
             LimitRow(model: model, title: L.t("week"), line: model.usage?.week, color: T.accent, pace: model.weekPaceText).padding(.top, 9)
+            CreditsLine(model: model).padding(.top, 6)
             if prefs.showSessions, !model.sessions.isEmpty { sessionsRow.padding(.top, 11) }
+            if prefs.showStatus { StatusRow(model: model).padding(.top, 10) }
             if detailsOpen && prefs.showDetails { DetailsView(model: model).padding(.top, 12) }
             footer.padding(.top, 8)
         }
@@ -299,7 +301,7 @@ struct MoreMenu: View {
 
     private var menu: some View {
         Menu {
-            Button(L.t("menu.refresh")) { model.refreshUsage() }
+            Button(L.t("menu.refresh")) { model.refreshUsage(); model.refreshStatus() }
             Button(L.t("menu.export")) { Exporter.run(model: model) }
             Button(L.t("menu.settings")) { SettingsWindow.open(openWindow) }
             Toggle(L.t("menu.float"), isOn: Binding(get: { FloatingWidget.shared.isOpen }, set: { on in
