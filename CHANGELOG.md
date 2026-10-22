@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Orcy 0.1.0, a second app in the package for Orca (the agent orchestrator): a menu bar orca with agents working (▶) and waiting for you (?), worktrees as Waiting for you / Running / Stopped, today's tasks, agents and agent time, the last 7 days. Read-only: `orca worktree ps --json` every 10 s while Orca runs, orca-stats.json and orchestration.db every minute. Reuses `CodexyCore`. See docs/ORCY.md.
 
 ## [0.1.0] - 2026-10-22
 ### Added
