@@ -293,6 +293,7 @@ struct FloatingCard: View {
             }.padding(.top, 8)
             HealthLine(model: model).padding(.top, 6)
             LimitRow(model: model, title: L.t("week"), line: model.usage?.week, color: T.accent, pace: model.weekPaceText).padding(.top, 9)
+            ExtraLimitsLine(model: model).padding(.top, 6)
             CreditsLine(model: model).padding(.top, 6)
             if prefs.showStatus {
                 HStack(spacing: 6) {

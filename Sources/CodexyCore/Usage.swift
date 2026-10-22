@@ -43,6 +43,14 @@ public struct ResetCredits: Equatable, Sendable {
     public init(available: Int, nextExpiry: Date?) { self.available = available; self.nextExpiry = nextExpiry }
 }
 
+/// A separate bucket from `rateLimitsByLimitId` (a model or feature with its own limits), not the main "codex" one.
+public struct ExtraLimit: Equatable, Sendable {
+    public var id: String
+    public var name: String
+    public var session: UsageLine?
+    public var week: UsageLine?
+}
+
 public struct CodexLimits: Equatable, Sendable {
     public enum Source: String, Sendable { case appServer, sessionFile }
     public var limits: [CodexLimit]
@@ -52,6 +60,9 @@ public struct CodexLimits: Equatable, Sendable {
     public var asOf: Date?
     public var credits: CodexCredits?
     public var resetCredits: ResetCredits?
+    public var extras: [ExtraLimit] = []
+    /// `rateLimitReachedType` as Codex sends it (which limit stopped you), nil while nothing is reached.
+    public var reachedType: String?
     public init(limits: [CodexLimit], plan: String?, source: Source, asOf: Date?,
                 credits: CodexCredits? = nil, resetCredits: ResetCredits? = nil) {
         self.limits = limits; self.plan = plan; self.source = source; self.asOf = asOf
@@ -84,7 +95,9 @@ public enum CodexParser {
         }
         guard !out.isEmpty else { return nil }
         let plan = (rl["planType"] ?? rl["plan_type"]) as? String
-        return CodexLimits(limits: out, plan: plan, source: source, asOf: asOf, credits: credits(rl["credits"]))
+        var l = CodexLimits(limits: out, plan: plan, source: source, asOf: asOf, credits: credits(rl["credits"]))
+        l.reachedType = (rl["rateLimitReachedType"] ?? rl["rate_limit_reached_type"]) as? String
+        return l
     }
 
     /// `{hasCredits, unlimited, balance}` (app-server) or `{has_credits, unlimited, balance}` (session files).
@@ -111,6 +124,11 @@ public enum CodexParser {
               let r = j["result"] as? [String: Any], let rl = r["rateLimits"] as? [String: Any],
               var l = limits(rl, source: .appServer, asOf: now, now: now) else { return nil }
         l.resetCredits = resetCredits(r["rateLimitResetCredits"], now: now)
+        let mine = rl["limitId"] as? String ?? "codex"
+        l.extras = (r["rateLimitsByLimitId"] as? [String: Any] ?? [:]).compactMap { id, v -> ExtraLimit? in
+            guard id != mine, let b = v as? [String: Any], let x = limits(b, source: .appServer, asOf: now, now: now) else { return nil }
+            return ExtraLimit(id: id, name: b["limitName"] as? String ?? id, session: x.session, week: x.week)
+        }.sorted { $0.id < $1.id }
         return l
     }
 

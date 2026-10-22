@@ -76,6 +76,31 @@ struct StatusRow: View {
     }
 }
 
+extension AppModel {
+    /// The limit Codex says was reached, then one line per extra bucket: "gpt-5-codex-spark: 5h 12% · week 3%".
+    var extraLimitLines: [String] {
+        guard let u = usage else { return [] }
+        var out: [String] = []
+        if let r = u.reachedType { out.append(L.t("limit.reached", r.replacingOccurrences(of: "_", with: " "))) }
+        for e in u.extras {
+            let parts = [e.session.map { "5h \($0.percent)%" }, e.week.map { "\(L.t("hist.week")) \($0.percent)%" }].compactMap { $0 }
+            out.append("\(e.name): " + parts.joined(separator: " · "))
+        }
+        return out
+    }
+}
+
+/// Reached limit and extra buckets under the week row. Hidden when Codex reports none.
+struct ExtraLimitsLine: View {
+    let model: AppModel
+
+    var body: some View {
+        ForEach(model.extraLimitLines, id: \.self) {
+            Text($0).font(.system(size: 11)).foregroundStyle(T.muted).lineLimit(1).truncationMode(.tail)
+        }
+    }
+}
+
 /// Reset credits and paid credits, under the week row. Hidden when Codex reports none.
 struct CreditsLine: View {
     let model: AppModel

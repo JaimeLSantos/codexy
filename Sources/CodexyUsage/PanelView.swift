@@ -17,6 +17,7 @@ struct PanelView: View {
             resetLine
             HealthLine(model: model).padding(.top, 6)
             LimitRow(model: model, title: L.t("week"), line: model.usage?.week, color: T.accent, pace: model.weekPaceText).padding(.top, 9)
+            ExtraLimitsLine(model: model).padding(.top, 6)
             CreditsLine(model: model).padding(.top, 6)
             if prefs.showSessions, !model.sessions.isEmpty { sessionsRow.padding(.top, 11) }
             if prefs.showStatus { StatusRow(model: model).padding(.top, 10) }
@@ -109,6 +110,7 @@ struct PanelView: View {
             if detailsOpen && prefs.showDetails {
                 T.rule.frame(height: 1).padding(.bottom, 7)
                 HStack(alignment: .top) {
+                    if let v = model.versionText { Text(v).font(.system(size: 10.5)).foregroundStyle(T.dim).help(L.t("version.tip")) }
                     Spacer()
                     Text("Codexy v\(AppInfo.version)").font(.system(size: 10.5)).foregroundStyle(T.dim)
                 }
