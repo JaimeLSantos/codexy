@@ -291,6 +291,13 @@ final class AppModel {
     var top: UsageLine? { usage?.session ?? usage?.week }
     var topIsWeek: Bool { usage?.session == nil && usage?.week != nil }
     var topPaceText: String? { topIsWeek ? weekPaceText : sessionPaceText }
+    /// What the big number is, at the start of the line under it: "Left this week", "Left", "Week"; nothing for the 5h use.
+    var topLabel: String? {
+        if Prefs.shared.showLeft { return L.t(topIsWeek ? "left.week" : "left") }
+        return topIsWeek ? L.t("week.line") : nil
+    }
+    /// "Left this week · resets in 6d 23h".
+    var topLine: String { topLabel.map { $0 + " · " + resetText } ?? resetText }
 
     var resetText: String {
         guard let u = usage else { return usageFailed ? L.t("noDataWhy", usageError) : L.t("loading") }
@@ -320,7 +327,9 @@ final class AppModel {
     func limitText(_ l: UsageLine?) -> String {
         guard let l else { return "" }
         let span = l.reset.flatMap { Format.span(to: $0, now: now) }
-        return span.map { "\(l.percent)% · \($0)" } ?? "\(l.percent)%"
+        let p = Prefs.shared
+        let pct = "\(p.shown(l.percent))%" + (p.showLeft ? " " + L.t("left.word") : "")
+        return span.map { "\(pct) · \($0)" } ?? pct
     }
 
     var sessionsText: String {

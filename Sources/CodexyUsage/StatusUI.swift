@@ -91,7 +91,8 @@ extension AppModel {
         var out: [String] = []
         if let r = u.reachedType { out.append(L.t("limit.reached", r.replacingOccurrences(of: "_", with: " "))) }
         for e in u.extras {
-            let parts = [e.session.map { "5h \($0.percent)%" }, e.week.map { "\(L.t("hist.week")) \($0.percent)%" }].compactMap { $0 }
+            let p = Prefs.shared
+            let parts = [e.session.map { "5h \(p.shown($0.percent))%" }, e.week.map { "\(L.t("hist.week")) \(p.shown($0.percent))%" }].compactMap { $0 }
             out.append("\(e.name): " + parts.joined(separator: " · "))
         }
         return out

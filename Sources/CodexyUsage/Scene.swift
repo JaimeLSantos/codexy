@@ -202,11 +202,10 @@ struct HeroView: View {
                                              startPoint: .leading, endPoint: .trailing))
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 2) {
-                    Text(model.top.map { "\($0.percent)" } ?? "--")
+                    Text(model.top.map { "\(prefs.shown($0.percent))" } ?? "--")
                         .font(.system(size: 34, weight: .light))
                         .foregroundStyle(model.top.map { T.level($0.percent) } ?? T.muted)
                     Text("%").font(.system(size: 15)).foregroundStyle(T.muted).baselineOffset(10)
-                    if model.topIsWeek { Text(L.t("week")).font(.system(size: 10, weight: .semibold)).foregroundStyle(T.dim).padding(.leading, 4) }
                 }
                 .allowsHitTesting(false)
             }

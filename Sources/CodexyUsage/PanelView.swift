@@ -75,13 +75,13 @@ struct PanelView: View {
                 .help(prefs.showSky ? model.skyTip : "")
                 .onAppear { model.scene.start() }
                 .onDisappear { model.scene.stop() }
-            ProgressBar(percent: model.top?.percent, height: 7, color: model.top.map { T.level($0.percent) } ?? T.ok)
+            ProgressBar(percent: model.top.map { prefs.shown($0.percent) }, height: 7, color: model.top.map { T.level($0.percent) } ?? T.ok)
         }
     }
 
     private var resetLine: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(model.resetText).font(.system(size: 12)).foregroundStyle(T.text2)
+            Text(model.topLine).font(.system(size: 12)).foregroundStyle(T.text2)
             if let p = model.topPaceText { Text(p).font(.system(size: 10)).foregroundStyle(T.dim) }
         }.padding(.top, 8)
     }
@@ -170,7 +170,7 @@ struct LimitRow: View {
                 Spacer()
                 Text(model.limitText(line)).font(.system(size: 11)).foregroundStyle(T.muted)
             }
-            ProgressBar(percent: line?.percent, height: 5, color: color)
+            ProgressBar(percent: line.map { Prefs.shared.shown($0.percent) }, height: 5, color: color)
             if let pace { Text(pace).font(.system(size: 10)).foregroundStyle(T.dim).frame(maxWidth: .infinity, alignment: .leading) }
         }
     }

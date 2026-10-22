@@ -285,10 +285,10 @@ struct FloatingCard: View {
                     .help(prefs.showSky ? model.skyTip : "")
                     .onAppear { model.scene.start() }
                     .onDisappear { model.scene.stop() }
-                ProgressBar(percent: model.top?.percent, height: 7, color: model.top.map { T.level($0.percent) } ?? T.ok)
+                ProgressBar(percent: model.top.map { prefs.shown($0.percent) }, height: 7, color: model.top.map { T.level($0.percent) } ?? T.ok)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.resetText).font(.system(size: 12)).foregroundStyle(T.text2)
+                Text(model.topLine).font(.system(size: 12)).foregroundStyle(T.text2)
                 if let p = model.topPaceText { Text(p).font(.system(size: 10)).foregroundStyle(T.dim) }
             }.padding(.top, 8)
             HealthLine(model: model).padding(.top, 6)
@@ -325,16 +325,17 @@ struct BubbleView: View {
     let model: AppModel
 
     var body: some View {
+        let p = Prefs.shared
         let s = model.top?.percent, w = model.topIsWeek ? nil : model.usage?.week?.percent
         ZStack {
             ring(1, 5, 0, T.track)
-            ring(CGFloat(s ?? 0) / 100, 5, 0, s.map { T.level($0) } ?? T.dim)
+            ring(CGFloat(s.map(p.shown) ?? 0) / 100, 5, 0, s.map { T.level($0) } ?? T.dim)
             if !model.topIsWeek {
                 ring(1, 2.5, 9, T.track)
-                ring(CGFloat(w ?? 0) / 100, 2.5, 9, T.accent)
+                ring(CGFloat(w.map(p.shown) ?? 0) / 100, 2.5, 9, T.accent)
             }
             VStack(spacing: -2) {
-                Text(s.map { "\($0)" } ?? "--").font(.system(size: 21, weight: .light)).foregroundStyle(s.map { T.level($0) } ?? T.muted).monospacedDigit()
+                Text(s.map { "\(p.shown($0))" } ?? "--").font(.system(size: 21, weight: .light)).foregroundStyle(s.map { T.level($0) } ?? T.muted).monospacedDigit()
                 Text(model.topIsWeek ? L.t("hist.week") : "5h").font(.system(size: 8.5, weight: .semibold)).foregroundStyle(T.dim)
             }
         }
