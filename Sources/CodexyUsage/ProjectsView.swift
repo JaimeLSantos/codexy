@@ -5,7 +5,7 @@ import CodexyCore
 // projects (click one for its models and busiest hours), models, and the heatmap.
 // They follow the period switch: the last 24 hours, or the 7 days scanned.
 
-private func since(_ model: AppModel, _ period: String) -> Int {
+@MainActor private func since(_ model: AppModel, _ period: String) -> Int {
     period == "day" ? Int(model.now.timeIntervalSince1970 / 3600) - 24 : Int.min
 }
 
