@@ -30,6 +30,23 @@ final class PetTests: XCTestCase {
         XCTAssertNil(p.pixels("normal", frame: f).first { $0.color == "#FF0000" })
     }
 
+    func testPosesWalkMirrorAndSitAfterStandingStill() throws {
+        let p = try XCTUnwrap(PetParser.parse(raw + "\n[walk1]\na.................\n[sit]\n.b................", id: "dot"))
+        var f = ClawdFrame(); f.feet = "left"; f.look = -1
+        XCTAssertEqual(p.pose(f, mood: "work", lift: 0).pose, "walk1")
+        XCTAssertTrue(p.pose(f, mood: "work", lift: 0).mirror)
+        f.feet = "right"
+        XCTAssertEqual(p.pose(f, mood: "work", lift: 0).pose, "walk1")     // no walk2: the one step repeats
+        let still = ClawdFrame()
+        XCTAssertNil(p.pose(still, mood: "idle", lift: 0, stillTicks: 2).pose)
+        XCTAssertEqual(p.pose(still, mood: "wait", lift: 0, stillTicks: Pet.sitAfter).pose, "sit")
+        XCTAssertNil(p.pose(still, mood: "work", lift: 0, stillTicks: 999).pose)  // working: stands
+        var flipped = ClawdFrame(); flipped.flip = true; flipped.feet = "left"
+        XCTAssertNil(p.pose(flipped, mood: "dead", lift: 0).pose)               // lying on its back keeps the face
+        // Mirrored: x goes to the other side.
+        XCTAssertEqual(p.pixels("normal", frame: ClawdFrame(), pose: "walk1", mirror: true).first?.rects, [PRect(17, 0, 1, 1)])
+    }
+
     func testNoArtIsNoPet() {
         XCTAssertNil(PetParser.parse("---\nname: x\n---\n", id: "x"))
     }

@@ -11,8 +11,12 @@ import Foundation
 //   [slack]             low use (optional, falls back to normal)
 //   [crit]              near the limit (optional)
 //   [sleep]             eyes closed (optional, falls back to slack)
+//   [walk1] [walk2]     side view facing right, two steps (optional); mirrored when walking left
+//   [sit]               side view facing right, sitting while idle (optional)
 
 public struct Pet: Equatable, Sendable {
+    /// Ticks of standing still before sitting down: about 3 s at 90 ms a tick.
+    public static let sitAfter = 33
     public var id: String
     public var name: String
     public var colors: [String: String]
@@ -25,20 +29,32 @@ public struct Pet: Equatable, Sendable {
 
     /// Rects per colour for one frame. `off` (rows of 4 px) and `dig` lower it, `x` shifts it in cells,
     /// `flip` lays it on its back: the same moves Clawd makes. Anything outside the frame is clipped.
-    public func pixels(_ mood: String, frame f: ClawdFrame) -> [(color: String, rects: [PRect])] {
+    public func pixels(_ mood: String, frame f: ClawdFrame, pose: String? = nil, mirror: Bool = false) -> [(color: String, rects: [PRect])] {
         let W = Clawd.W, H = Clawd.H
         let oy = 4 * f.off + f.dig, ox = 2 * f.x
         let lim = f.dig > 0 ? H - 2 : H
         var by: [String: [PRect]] = [:]
-        for (y, row) in rows(mood).prefix(H).enumerated() {
+        let art = pose.flatMap { self.art[$0] } ?? rows(mood)
+        for (y, row) in art.prefix(H).enumerated() {
             for (x, ch) in row.prefix(W).enumerated() {
                 guard let c = colors[String(ch)] else { continue }
-                let sy = (f.flip ? H - 1 - y : y) + oy, sx = x + ox
+                let sy = (f.flip ? H - 1 - y : y) + oy, sx = (mirror ? W - 1 - x : x) + ox
                 guard sx >= 0, sx < W, sy >= 0, sy < lim else { continue }
                 by[c, default: []].append(PRect(Double(sx), Double(sy), 1, 1))
             }
         }
         return by.keys.sorted().map { ($0, by[$0]!) }
+    }
+
+    /// Which pose the brain's frame asks for: a side step while walking, sitting once it has stood still a while
+    /// (idle or waiting for you), else the face. Only poses the file has; `mirror` when facing left.
+    public func pose(_ f: ClawdFrame, mood: String, lift: Double, stillTicks: Int = .max) -> (pose: String?, mirror: Bool) {
+        guard !f.flip, f.dig == 0, f.off == 0 else { return (nil, false) }
+        if f.feet != "both", art["walk1"] != nil {
+            return (f.feet == "left" ? "walk1" : (art["walk2"] != nil ? "walk2" : "walk1"), f.look < 0)
+        }
+        if ["idle", "doze", "wait"].contains(mood), stillTicks >= Pet.sitAfter, lift == 0, art["sit"] != nil { return ("sit", f.look < 0) }
+        return (nil, false)
     }
 }
 

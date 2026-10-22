@@ -15,9 +15,9 @@
 - `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
 
 ## Next
-- Theo (the owner's blue heeler) is drawn from his photos (photos stay out of the repo). Still to do: a side view for walking (roan back, black patch, dark-tipped tail).
+- Theo (the owner's blue heeler) is drawn from his photos (photos stay out of the repo). He walks in side view and sits when idle or waiting (`[walk1] [walk2] [sit]` in the pet file, optional per pet).
 - Accessories (skins) are hidden: they are anchored to Clawd's head. Give each pet file a head anchor, then show them again.
-- Pets face one way: Clawd's turn and look poses are not drawn yet; a mirrored walk would read better.
+- Bit, Coruja and Livrinho have no side poses yet: they walk facing forward.
 - App icon (`Resources/AppIcon.icns`), README pictures.
 - Decide how often to start `codex app-server` (now once a minute, a fresh process each time) or keep one running.
 - Show credits / reset-credit counts the app-server returns (`credits`, `rateLimitResetCredits`).

@@ -77,14 +77,14 @@ enum Snapshot {
 
     /// `--pets DIR`: pets.png, every mascot in each mood, big enough to judge the pixels.
     static func pets(dir: String) {
-        let moods = ["normal", "slack", "crit", "sleep"]
+        let moods = ["normal", "slack", "crit", "sleep", "walk1", "walk2", "sit"]
         let sheet = VStack(alignment: .leading, spacing: 10) {
             ForEach(Pets.all(), id: \.id) { p in
                 HStack(spacing: 10) {
                     Text(p.name).font(.system(size: 11, weight: .semibold)).foregroundStyle(T.text2).frame(width: 70, alignment: .leading)
-                    ForEach(moods, id: \.self) { m in
+                    ForEach(moods.filter { !["walk1", "walk2", "sit"].contains($0) || p.art[$0] != nil }, id: \.self) { m in
                         VStack(spacing: 2) {
-                            PetPreview(pet: p, mood: m).frame(width: 64, height: 40).scaleEffect(1.6).frame(width: 100, height: 64)
+                            PetPreview(pet: p, mood: m, pose: ["walk1", "walk2", "sit"].contains(m) ? m : nil).frame(width: 64, height: 40).scaleEffect(1.6).frame(width: 100, height: 64)
                             Text(m).font(.system(size: 9)).foregroundStyle(T.muted)
                         }
                     }

@@ -114,6 +114,7 @@ struct PetPreview: View {
     let pet: Pet
     var hover = false
     var mood: String?
+    var pose: String?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 0.8)) { t in
@@ -122,7 +123,7 @@ struct PetPreview: View {
             Canvas { ctx, size in
                 let u = 2.3
                 let ox = (size.width - 18 * u) / 2, oy = (size.height - 12 * u * 1.1) / 2
-                for (c, rects) in pet.pixels(m, frame: ClawdFrame()) {
+                for (c, rects) in pet.pixels(m, frame: ClawdFrame(), pose: pose) {
                     var p = Path()
                     for r in rects { p.addRect(CGRect(x: ox + r.x * u, y: oy + r.y * u * 1.1, width: r.w * u, height: r.h * u * 1.1)) }
                     ctx.fill(p, with: .color(Color(hexString: c)))

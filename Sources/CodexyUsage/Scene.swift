@@ -90,6 +90,7 @@ final class SceneModel {
     var skin: Skin { skinOverride ?? Skins.current() }
     var pet: Pet? { Pets.current() }
     @ObservationIgnored var pct: Int?               // picks the pet's face
+    var stillTicks = 0                              // how long the pet has stood still: it sits after a while
     var size = CGSize(width: 272, height: 56)
     @ObservationIgnored let clawd: Mascot
     @ObservationIgnored let skySim: Sky
@@ -151,6 +152,7 @@ final class SceneModel {
         let s = Self.scale
         let areaW = (size.width - Self.areaLeft) / s
         mascot = clawd.step(areaWidth: areaW, mouseLook: mouseLook)
+        stillTicks = mascot.frame.feet == "both" && mascot.lift == 0 ? stillTicks + 1 : 0
         sky = skySim.step(w: size.width / s, h: size.height / s, lon: lon, now: clock ?? Date())
     }
 
@@ -285,7 +287,8 @@ struct SceneCanvas: View {
                     l.fill(p, with: .color(c))
                 }
                 if let pet {
-                    for (c, rects) in pet.pixels(Pets.mood(m, pct: pct), frame: m.frame) { f(rects, Color(hexString: c)) }
+                    let pose = pet.pose(m.frame, mood: m.mood, lift: m.lift, stillTicks: scene.stillTicks)
+                    for (c, rects) in pet.pixels(Pets.mood(m, pct: pct), frame: m.frame, pose: pose.pose, mirror: pose.mirror) { f(rects, Color(hexString: c)) }
                 } else {
                     f(px4.body, Color(hexString: skin.body))
                     f(px4.eyes, Color(hexString: skin.eyes))
