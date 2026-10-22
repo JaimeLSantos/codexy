@@ -6,6 +6,8 @@
 - Panel: 5h hero + bar, reset time, pace, week row, plan in the footer, 24h / week chart. Menu bar: two mini bars 5h / W.
 - Mascots: `Pet.swift` + `pets/*.txt` (theo, bit, owl, book), picker with live preview in Settings → Look, `--pets DIR` renders every mood. Clawd only with `CODEXY_PET=clawd` (dev).
 - Own bundle id, data folder, log and defaults domain (`dev.julio.codexy`, `Application Support/Codexy`, `Logs/Codexy.log`).
+- OpenAI status (`Status.swift`): `status.openai.com/proxy/status.openai.com` (the incident.io JSON the page itself loads, has the groups), fallback `/api/v2/summary.json` (Statuspage shape, seen 2026-10-22 with only part of the components and no incidents). Only the "Codex" group (Codex Web, Codex API, CLI, VS Code extension) plus any component named "Codex" set the level. Every 2 minutes. The proxy URL is not a documented API: if it breaks, the fallback still gives the overall indicator.
+- Credits (`CodexCredits`, `ResetCredits` in `Usage.swift`): shape from codex-rs `app-server-protocol` v2 (`GetAccountRateLimitsResponse`). Shown under the week row only when there is something (reset credits > 0, balance > 0 or unlimited). Session files carry `credits` but not reset credits.
 
 ## Running sessions (`CodexSessions.swift`)
 - Codex has no registry like `~/.claude/sessions`. A live thread keeps its rollout file open (codex-rs `rollout/src/recorder.rs`), so: list the user's processes named `codex*` (sysctl), their open files (libproc), keep `sessions/**/rollout-*.jsonl`. Checked live with codex-cli 0.163.0: the TUI starts an app-server child (`codex app-server --listen unix://`) and that child holds the file, so `pid` is the child, not the Terminal process. One process can hold several threads, so the id is the thread id. `source` says "vscode" even for the TUI; `originator` ("codex-tui") tells where a session came from. The Codex desktop app held no rollout file when checked.
@@ -15,8 +17,8 @@
 
 ## Hidden or stubbed (the provider data is not wired yet)
 - Projects, models, heatmap, usage profile, token stats window: removed from the panel; `ProjectUsage`, `HeatmapView`, `Export.projects` remain as models.
-- Status page and CLI version/update rows: removed (Claudy read Anthropic's status page and `claude update`).
-- Settings: the Claude Code settings editor tab is gone. Toggles for status/Fable are gone; "Running sessions" and "Plan and account" toggles stay.
+- CLI version/update row: removed (Claudy read `claude --version` and ran `claude update`). Status is back, from OpenAI.
+- Settings: the Claude Code settings editor tab is gone. The Fable toggle is gone (status is back); "Running sessions" and "Plan and account" toggles stay.
 - `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
 
 ## Next
@@ -25,7 +27,6 @@
 - Bit, Coruja and Livrinho have no side poses yet: they walk facing forward.
 - App icon (`Resources/AppIcon.icns`), README pictures.
 - Decide how often to start `codex app-server` (now once a minute, a fresh process each time) or keep one running.
-- Show credits / reset-credit counts the app-server returns (`credits`, `rateLimitResetCredits`).
 - Projects from the rollout files.
 - Sessions, exact "waiting": an opt-in Codex `PermissionRequest`/`Stop` hook (writes to `~/.codex/config.toml`, so only after a click), or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`) when the user runs it.
 - Release script, Homebrew cask.

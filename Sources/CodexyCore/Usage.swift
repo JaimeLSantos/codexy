@@ -24,6 +24,25 @@ public struct CodexLimit: Equatable, Sendable {
     public var line: UsageLine { UsageLine(percent: Int(usedPercent.rounded()), reset: resetsAt) }
 }
 
+/// Paid credits for use past the plan (`rateLimits.credits`). The balance is a decimal string, kept as Codex sends it.
+public struct CodexCredits: Equatable, Sendable {
+    public var hasCredits: Bool
+    public var unlimited: Bool
+    public var balance: String?
+    public init(hasCredits: Bool, unlimited: Bool, balance: String?) { self.hasCredits = hasCredits; self.unlimited = unlimited; self.balance = balance }
+    /// Worth a line in the panel: unlimited, or a balance above zero.
+    public var worthShowing: Bool { unlimited || (hasCredits && (Double(balance ?? "") ?? 0) > 0) }
+}
+
+/// Reset credits (`rateLimitResetCredits`, app-server only): each one starts the limits over early.
+/// Codexy only counts them; redeeming one is done in Codex itself.
+public struct ResetCredits: Equatable, Sendable {
+    public var available: Int
+    /// The soonest expiry among the listed credits, when Codex lists them.
+    public var nextExpiry: Date?
+    public init(available: Int, nextExpiry: Date?) { self.available = available; self.nextExpiry = nextExpiry }
+}
+
 public struct CodexLimits: Equatable, Sendable {
     public enum Source: String, Sendable { case appServer, sessionFile }
     public var limits: [CodexLimit]
@@ -31,8 +50,12 @@ public struct CodexLimits: Equatable, Sendable {
     public var source: Source
     /// When the numbers were true: now for the app-server, the event time for a session file.
     public var asOf: Date?
-    public init(limits: [CodexLimit], plan: String?, source: Source, asOf: Date?) {
+    public var credits: CodexCredits?
+    public var resetCredits: ResetCredits?
+    public init(limits: [CodexLimit], plan: String?, source: Source, asOf: Date?,
+                credits: CodexCredits? = nil, resetCredits: ResetCredits? = nil) {
         self.limits = limits; self.plan = plan; self.source = source; self.asOf = asOf
+        self.credits = credits; self.resetCredits = resetCredits
     }
     // Picked by length, not by primary/secondary: the order is Codex's choice and could change.
     public var session: UsageLine? { limits.first { $0.windowMinutes <= 24 * 60 }?.line }
@@ -61,14 +84,34 @@ public enum CodexParser {
         }
         guard !out.isEmpty else { return nil }
         let plan = (rl["planType"] ?? rl["plan_type"]) as? String
-        return CodexLimits(limits: out, plan: plan, source: source, asOf: asOf)
+        return CodexLimits(limits: out, plan: plan, source: source, asOf: asOf, credits: credits(rl["credits"]))
+    }
+
+    /// `{hasCredits, unlimited, balance}` (app-server) or `{has_credits, unlimited, balance}` (session files).
+    static func credits(_ any: Any?) -> CodexCredits? {
+        guard let c = any as? [String: Any] else { return nil }
+        let has = (c["hasCredits"] ?? c["has_credits"]) as? Bool ?? false
+        let balance = (c["balance"] as? String) ?? (c["balance"] as? NSNumber)?.stringValue
+        return CodexCredits(hasCredits: has, unlimited: c["unlimited"] as? Bool ?? false, balance: balance)
+    }
+
+    /// `{availableCount, credits: [{expiresAt, status, ...}] | null}`; only credits still available count for the expiry.
+    static func resetCredits(_ any: Any?, now: Date) -> ResetCredits? {
+        guard let r = any as? [String: Any], let n = (r["availableCount"] as? NSNumber)?.intValue else { return nil }
+        let expiries = (r["credits"] as? [[String: Any]] ?? [])
+            .filter { ($0["status"] as? String ?? "available") == "available" }
+            .compactMap { ($0["expiresAt"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) } }
+            .filter { $0 > now }
+        return ResetCredits(available: n, nextExpiry: expiries.min())
     }
 
     /// The JSON-RPC answer to `account/rateLimits/read`.
     public static func appServer(_ data: Data, now: Date = Date()) -> CodexLimits? {
         guard let j = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let r = j["result"] as? [String: Any], let rl = r["rateLimits"] as? [String: Any] else { return nil }
-        return limits(rl, source: .appServer, asOf: now, now: now)
+              let r = j["result"] as? [String: Any], let rl = r["rateLimits"] as? [String: Any],
+              var l = limits(rl, source: .appServer, asOf: now, now: now) else { return nil }
+        l.resetCredits = resetCredits(r["rateLimitResetCredits"], now: now)
+        return l
     }
 
     /// The last `event_msg` / `token_count` line that carries rate limits, read from the end.
