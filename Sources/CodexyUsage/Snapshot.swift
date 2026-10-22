@@ -184,7 +184,7 @@ enum Snapshot {
 }
 
 
-/// The app icon: Clawd on the panel's dark card, with a few stars.
+/// The app icon: Theo on the panel's dark card, with a few stars.
 struct IconView: View {
     var body: some View {
         Canvas { ctx, size in
@@ -195,16 +195,15 @@ struct IconView: View {
             for (x, y, r) in [(0.22, 0.24, 0.012), (0.78, 0.2, 0.016), (0.68, 0.34, 0.01), (0.3, 0.38, 0.01), (0.86, 0.46, 0.012)] {
                 ctx.fill(Path(ellipseIn: CGRect(x: w * x, y: w * y, width: w * r * 2, height: w * r * 2)), with: .color(.white.opacity(0.7)))
             }
-            let px = Clawd.pixels(ClawdFrame())
+            guard let theo = Pets.all().first(where: { $0.id == "theo" }) else { return }
             let u = w * 0.66 / 18                       // one pixel
             let ox = (w - 18 * u) / 2, oy = w * 0.5 - 6 * u * 1.1
-            func f(_ r: [PRect], _ c: Color) {
+            for (c, rects) in theo.pixels("normal", frame: ClawdFrame()) {
                 var p = Path()
-                for q in r { p.addRect(CGRect(x: ox + q.x * u, y: oy + q.y * u * 1.1, width: q.w * u, height: q.h * u * 1.1)) }
-                ctx.fill(p, with: .color(c))
+                for q in rects { p.addRect(CGRect(x: ox + q.x * u, y: oy + q.y * u * 1.1, width: q.w * u, height: q.h * u * 1.1)) }
+                ctx.fill(p, with: .color(Color(hexString: c)))
             }
-            f(px.body, Color(hex: 0xD77757)); f(px.eyes, Color(hex: 0x141416))
-            ctx.fill(Path(CGRect(x: w * 0.2, y: oy + 10 * u * 1.1 + u * 0.4, width: w * 0.6, height: u * 0.5)), with: .color(Color(hex: 0xB8955E).opacity(0.5)))
+            ctx.fill(Path(CGRect(x: w * 0.2, y: oy + 12 * u * 1.1 + u * 0.4, width: w * 0.6, height: u * 0.5)), with: .color(Color(hex: 0xB8955E).opacity(0.5)))
         }
     }
 }
