@@ -13,6 +13,7 @@
 - Reset credits and paid credits under the week row, when Codex reports any (`rateLimitResetCredits`, `rateLimits.credits`): how many, and when the next one expires. Read-only: Codexy never redeems one.
 - Extra limits: when Codex reports other buckets (`rateLimitsByLimitId`, a model or feature with its own limits) each gets a line under the week row, and `rateLimitReachedType` shows which limit stopped you. Plus plans report only the main bucket today, so this is covered by tests, not yet seen live.
 - Codex version in the Details footer, with "update available" when GitHub's latest release is newer and the command to run in a terminal. Show only: Codexy never updates Codex.
+- App icon with Theo, `scripts/package.sh` (universal ad-hoc signed zip with SHA-256) and a README with pictures.
 - CI on a macOS runner: `swift build` and `swift test` on every pull request.
 
 ### Fixed

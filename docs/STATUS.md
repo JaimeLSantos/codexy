@@ -22,7 +22,6 @@ Done:
 Pending:
 - Side views (walk and sit) for Bit, Coruja and Livrinho: they walk facing forward.
 - Accessories (skins) are hidden: they are drawn for Clawd's head. Redraw them for the new heads (or give each pet file a head anchor), then show them again.
-- App icon with Theo (`Resources/AppIcon.icns`) and README pictures.
 - Clawd stays only in dev mode (`CODEXY_PET=clawd`): he is Anthropic's character and is not in the picker.
 
 ## Running sessions (`CodexSessions.swift`)
@@ -43,6 +42,7 @@ Pending:
 
 ## Done after the review (branch `claude/extra-limits-version`, not merged)
 - Extra limits (`ExtraLimit`, `reachedType` in `Usage.swift`; `ExtraLimitsLine` in `StatusUI.swift`). Real answer checked 2026-10-22 on Plus: `rateLimitsByLimitId` has only `codex`, `rateLimitReachedType` and `individualLimit` are null, `spendControlReached` false (not read). The extra-bucket and reached lines are tested with fixtures only.
+- Distribution pieces: app icon with Theo (`scripts/make-icon.sh`, `Resources/AppIcon.icns`), `scripts/package.sh` (universal zip + sha256, tested: `x86_64 arm64`), README with pictures from `CODEXY_DEMO=1 ... -language en --readme docs/images` (made-up data). Still to do: release 0.1.0 on GitHub and the cask (both outward, need the owner's go).
 - Codex version (`Version.swift`): `codex --version` plus GitHub `releases/latest` (tag `rust-v0.163.0`), every 6 h, in the Details footer.
 
 ## Pending
@@ -70,5 +70,5 @@ Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}`
 
 ## Next (proposed order for 2026-10-23)
 1. The three checks above (waiting with approvals, desktop app, weights): they decide whether sessions and Details need fixes before a release.
-2. Distribution: icon with Theo, `package.sh`, release 0.1.0, cask.
+2. Release 0.1.0 and the cask (icon, package.sh and README are done).
 3. Then: tokens window, `config.toml` editor, side poses and accessories, long-lived app-server.
