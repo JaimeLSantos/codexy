@@ -53,7 +53,13 @@ public enum StatusFetcher {
 
     /// Worst level of the important components: a major outage beats anything minor.
     static func level(_ affected: [ServiceStatus.Component]) -> ServiceStatus.Level {
-        affected.filter(\.important).map { severity($0.status) }.reduce(.ok) { a, b in a == .major || b == .major ? .major : (a == .minor || b == .minor ? .minor : .ok) }
+        var worst = ServiceStatus.Level.ok
+        for c in affected where c.important {
+            let s = severity(c.status)
+            if s == .major { return .major }
+            if s == .minor { worst = .minor }
+        }
+        return worst
     }
 
     /// The page's own JSON: `summary.components` (id, name), `summary.structure.items[].group` (name, components[].component_id),
