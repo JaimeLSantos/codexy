@@ -15,7 +15,7 @@
 - `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
 
 ## Next
-- Heeler: refine the pixel map from the owner's dog photo (colours and markings come via the project thread).
+- Heeler v3 is drawn from the owner's photos (photos stay out of the repo). Still to do: a side view for walking (roan back, black patch, dark-tipped tail) and her name.
 - Accessories (skins) are hidden: they are anchored to Clawd's head. Give each pet file a head anchor, then show them again.
 - Pets face one way: Clawd's turn and look poses are not drawn yet; a mirrored walk would read better.
 - App icon (`Resources/AppIcon.icns`), README pictures.
