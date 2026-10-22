@@ -34,7 +34,7 @@ Pending:
 - Usage profile (context size, skills, MCP) and the token stats window: Claude-only reports, no Codex counterpart. A tokens-per-day window could be built from the same rollout scan.
 - CLI version/update row: removed (Claudy read `claude --version` and ran `claude update`). Status is back, from OpenAI.
 - Settings: the Claude Code settings editor tab is gone. The Fable toggle is gone (status is back); "Running sessions" and "Plan and account" toggles stay.
-- `Strings.swift` still holds Claudy keys for the removed features; prune when each one is decided.
+- `Strings.swift`: the Claudy keys for removed features are gone (profile, tokens window, Fable, changes). Keys the tokens window needs are written again when it is built.
 
 ## Checked live vs not checked (as of 2026-10-22, codex-cli 0.163.0, Plus plan)
 - Checked on the owner's Mac: limits from `app-server`; sessions list with a TUI open (1 session, idle, named by its thread title); Details with a real week (turns, sessions, projects, models, heatmap filled).
@@ -56,7 +56,6 @@ Limits and data:
 - Keep one `codex app-server` running instead of a fresh process every minute (cost vs simplicity: decide after measuring the spawn).
 - Exact "waiting": opt-in Codex `PermissionRequest`/`Stop` hook or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`).
 - `~/.codex/config.toml` editor (like Claudy's `settings.json` tab): read-only view first; any write only after a click, keeping comments and order.
-- Prune the Claudy keys left in `Strings.swift`.
 
 Mascot: see the Mascot section (side poses for Bit, Coruja and Livrinho; accessories; app icon with Theo).
 
