@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Tokens per day window (panel menu → "Tokens per day…"): stacked bars by model for 7 or 30 days, with input, output and cached totals per model. Real token counts from the rollout files, the same scan as Details; nothing is read but the counts.
 
 ## [0.1.0] - 2026-10-22
 ### Added
