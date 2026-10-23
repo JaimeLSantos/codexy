@@ -98,6 +98,8 @@ final class SceneModel {
     @ObservationIgnored var lon: Double?
     @ObservationIgnored var city: String? = UserDefaults.standard.string(forKey: "lastCity")
     @ObservationIgnored private var running = false
+    /// The panel is on screen (it animates only then).
+    var isShown: Bool { running }
     @ObservationIgnored private let location = LocationProvider()
     @ObservationIgnored var weatherAt = Date.distantPast
     @ObservationIgnored var mouseLook: Int?
@@ -141,7 +143,7 @@ final class SceneModel {
         let l = model.live
         i.busy = model.working
         i.waiting = model.waiting
-        i.sessions = (l?.count(.open) ?? 0) + i.busy + i.waiting
+        i.sessions = (l?.count(.open) ?? 0) + (l?.agentsOpen ?? 0) + i.busy + i.waiting
         // The face: tense while someone waits, plain while agents work, relaxed when all is quiet.
         pct = i.waiting > 0 ? 100 : i.busy > 0 ? 50 : 0
         clawd.observe(i)

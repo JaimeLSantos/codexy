@@ -39,6 +39,8 @@ enum L {
 
     static let table: [String: [String: String]] = [
         "en": [
+            "sec.agents": "OPEN AGENTS", "wt.agentOpen": "open", "wt.agents.one": "open agent", "wt.agents.many": "open agents",
+            "wt.stopped.one": "stopped", "wt.stopped.many": "stopped", "wt.external": "worktree outside Orca (not created by it)",
             "app.title": "ORCA",
             "tab.bar": "Panel",
             "sec.waiting": "WAITING FOR YOU",
@@ -163,6 +165,8 @@ enum L {
             "set.moreHint": "The rest of Claude Code's settings (hooks, permissions, plugins, env) are in settings.json",
         ],
         "pt": [
+            "sec.agents": "AGENTES ABERTOS", "wt.agentOpen": "aberto", "wt.agents.one": "agente aberto", "wt.agents.many": "agentes abertos",
+            "wt.stopped.one": "parado", "wt.stopped.many": "parados", "wt.external": "worktree fora do Orca (não criado por ele)",
             "app.title": "ORCA",
             "tab.bar": "Painel",
             "sec.waiting": "ESPERANDO VOCÊ",

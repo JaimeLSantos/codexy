@@ -44,7 +44,7 @@ struct PanelView: View {
         HeroView(scene: model.scene, model: model)
             .help(prefs.showSky ? model.skyTip : "")
             // The menu bar keeps this view alive while the panel is closed: animate only while it is on screen.
-            .background { if !DevFlags.offscreen { WindowVisibility { $0 ? model.scene.start() : model.scene.stop() } } }
+            .background { if !DevFlags.offscreen { WindowVisibility { if $0 { model.scene.start(); model.refreshLive(force: true) } else { model.scene.stop() } } } }
     }
 
     // MARK: worktrees by what they do
@@ -52,9 +52,11 @@ struct PanelView: View {
         if let l = model.live {
             let all = l.sorted
             let waiting = all.filter { $0.phase == .waiting }, working = all.filter { $0.phase == .working }
+            let agents = all.filter { $0.phase == .agent }
             let idle = all.filter { $0.phase == .open || $0.phase == .closed }
             if !waiting.isEmpty { section(L.t("sec.waiting"), "\(waiting.count)", T.warn) { rows(waiting) } }
             if !working.isEmpty { section(L.t("sec.working"), "\(working.count)", T.ok) { rows(working) } }
+            if !agents.isEmpty { section(L.t("sec.agents"), "\(agents.count)", T.accent) { rows(agents) } }
             if prefs.showIdle, !idle.isEmpty {
                 section(L.t("sec.idle"), "\(idle.count)", T.dim, toggle: true) { if idleOpen { rows(idle) } }
             }
@@ -62,7 +64,7 @@ struct PanelView: View {
     }
 
     private func rows(_ list: [OrcaWorktree]) -> some View {
-        VStack(spacing: 6) { ForEach(list) { WorktreeRow(w: $0, model: model) } }
+        VStack(spacing: 6) { ForEach(list) { WorktreeRow(w: $0, model: model, showRepo: (model.live?.repos.count ?? 0) > 1) } }
     }
 
     private func section<C: View>(_ title: String, _ count: String, _ color: Color, toggle: Bool = false, @ViewBuilder _ content: () -> C) -> some View {
@@ -109,6 +111,7 @@ struct PanelView: View {
 struct WorktreeRow: View {
     let w: OrcaWorktree
     let model: AppModel
+    var showRepo = false         // more than one repo: say which one
 
     var body: some View {
         Button { PanelView.openOrca() } label: {
@@ -116,7 +119,7 @@ struct WorktreeRow: View {
                 Circle().fill(color).frame(width: 7, height: 7).padding(.top, 5)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(Redact.name(w.name, "worktree")).font(.system(size: 12, weight: .medium)).foregroundStyle(T.text2).lineLimit(1)
-                    Text(detail).font(.system(size: 10.5)).foregroundStyle(T.muted).lineLimit(1).truncationMode(.middle)
+                    Text(detail).font(.system(size: 10.5)).foregroundStyle(T.muted).lineLimit(1).truncationMode(.tail)
                 }
                 Spacer(minLength: 8)
                 VStack(alignment: .trailing, spacing: 1) {
@@ -127,7 +130,7 @@ struct WorktreeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(L.t("orca.open"))
+        .help([w.path.isEmpty ? nil : w.path, w.external ? L.t("wt.external") : nil, L.t("orca.open")].compactMap { $0 }.joined(separator: "\n"))
     }
 
     /// The agent that sets the phase, if any.
@@ -141,20 +144,25 @@ struct WorktreeRow: View {
     /// Since when the worktree is in this phase: the agent's state, else the last terminal output.
     private var when: Date? { (w.phase == .waiting || w.phase == .working) ? (agent?.since ?? w.lastOutput) : w.lastOutput }
 
-    // "fix-login · codex", the repo when the name is not the branch.
+    // "web-app · claude + codex": the repo when there are several, who runs there, then the branch when it says
+    // more than the name (last, so a long branch is what gets cut).
     private var detail: String {
-        var parts = [Redact.name(w.branch.isEmpty ? w.repo : w.branch, "branch")]
-        if let a = agent, w.phase != .closed { parts.append(a.type) }
+        var parts: [String] = []
+        if showRepo, !w.repo.isEmpty { parts.append(Redact.name(w.repo, "repo")) }
+        if !w.agentNames.isEmpty, w.phase != .closed { parts.append(w.agentNames.joined(separator: " + ")) }
+        let name = (w.name as NSString).lastPathComponent
+        if !w.branch.isEmpty, !w.branch.hasSuffix(name), !(w.isMain && showRepo && w.branch == "main") { parts.append(Redact.name(w.branch, "branch")) }
         if w.phase == .closed { parts.append(L.t("wt.noTerminal")) }
-        return parts.joined(separator: " · ")
+        return parts.isEmpty ? Redact.name(w.branch.isEmpty ? w.repo : w.branch, "branch") : parts.joined(separator: " · ")
     }
     private var color: Color {
-        switch w.phase { case .waiting: T.warn; case .working: T.ok; case .open: T.muted; case .closed: T.off }
+        switch w.phase { case .waiting: T.warn; case .working: T.ok; case .agent: T.accent; case .open: T.muted; case .closed: T.off }
     }
     private var state: String {
         switch w.phase {
         case .waiting: L.t("waitingForYou")
-        case .working: agent == nil ? L.t("wt.output") : L.t("working")
+        case .working: agent == nil && w.agentNames.isEmpty ? L.t("wt.output") : L.t("working")
+        case .agent: L.t("wt.agentOpen")
         case .open: L.t("wt.quiet")
         case .closed: L.t("wt.closedOne")
         }
@@ -257,7 +265,7 @@ struct MoreMenu: View {
 
     private var menu: some View {
         Menu {
-            Button(L.t("menu.refresh")) { model.refreshLive(); model.refreshHistory() }
+            Button(L.t("menu.refresh")) { model.refreshLive(force: true); model.refreshHistory() }
             Button(L.t("orca.open")) { PanelView.openOrca() }
             Button(L.t("menu.settings")) { SettingsWindow.open(openWindow) }
             Toggle(L.t("menu.launch"), isOn: Binding(get: { login }, set: { LoginItem.set($0); login = LoginItem.isOn }))

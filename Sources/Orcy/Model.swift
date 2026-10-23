@@ -36,17 +36,17 @@ final class AppModel {
         every(0.5) { [self] in if alertWaiting || alertCelebrating { alertTick += 1 } }
         every(600) { [self] in scene.refreshWeather() }
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 3) { self?.refreshLive() } }
+            MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 3) { self?.refreshLive(force: true) } }
         }
         // Orca opening or quitting shows at once, not at the next tick.
         for name in [NSWorkspace.didLaunchApplicationNotification, NSWorkspace.didTerminateApplicationNotification] {
             NSWorkspace.shared.notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] n in
                 guard (n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier == OrcaCLI.bundleId else { return }
-                MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self?.refreshLive() } }
+                MainActor.assumeIsolated { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self?.refreshLive(force: true) } }
             }
         }
         if Prefs.shared.alertsNotifyWaiting || Prefs.shared.alertsNotifyDone { Notifier.authorize() }
-        refreshLive(); refreshHistory()
+        refreshLive(force: true); refreshHistory()
     }
 
     private func every(_ s: TimeInterval, _ f: @escaping @MainActor () -> Void) {
@@ -58,8 +58,11 @@ final class AppModel {
     static var orcaIsRunning: Bool { !NSRunningApplication.runningApplications(withBundleIdentifier: OrcaCLI.bundleId).isEmpty }
 
     @ObservationIgnored private var probing = false
-    /// Asks Orca only while it runs: the CLI must never be what starts it.
-    func refreshLive() {
+    /// Asks Orca only while it runs: the CLI must never be what starts it. Each read starts the CLI twice (~0.3 s of
+    /// CPU), so it runs every 10 s while something works or waits or the panel is open, and every 30 s when all is quiet.
+    func refreshLive(force: Bool = false) {
+        let busy = working > 0 || waiting > 0 || scene.isShown
+        if !force, let at = liveAt, Date().timeIntervalSince(at) < (busy ? 9 : 29) { return }
         let old = Self.orcaIsRunning && (liveAt.map { Date().timeIntervalSince($0) > 60 } ?? false)
         if old != stale { stale = old }
         guard Self.orcaIsRunning else {
@@ -136,15 +139,15 @@ final class AppModel {
     /// second, so the menu bar picture is redrawn only when something changed.
     var stale = false
 
-    /// "2 working · 1 waiting for you · 9 open · 6 closed", or why there is nothing.
+    /// "1 working · 3 open agents · 12 stopped", or why there is nothing.
     var headline: String {
         guard orcaRunning else { return L.t("orca.closed") }
         guard let l = live else { return liveError.isEmpty ? L.t("loading") : L.t("orca.noAnswer", liveError) }
         var parts = ["\(l.working) " + L.t("working")]
         if l.waiting > 0 { parts.append(L.count("waitingForYou", l.waiting)) }
-        let open = l.count(.open), closed = l.count(.closed)
-        if open > 0 { parts.append(L.count("wt.open", open)) }
-        if closed > 0 { parts.append(L.count("wt.closed", closed)) }
+        if l.agentsOpen > 0 { parts.append(L.count("wt.agents", l.agentsOpen)) }
+        let stopped = l.count(.open) + l.count(.closed)
+        if stopped > 0 { parts.append(L.count("wt.stopped", stopped)) }
         if l.worktrees.isEmpty { return L.t("nothing") }
         return parts.joined(separator: " · ") + (stale ? " · " + L.t("stale") : "")
     }
@@ -190,11 +193,14 @@ final class AppModel {
         let t = Date()
         func at(_ s: TimeInterval) -> Date { t.addingTimeInterval(s) }
         func agent(_ state: String, _ ago: TimeInterval) -> OrcaAgent { OrcaAgent(type: "codex", state: state, since: at(-ago)) }
+        var ext = OrcaWorktree(id: "6", name: "export-csv", repo: "web-app", branch: "export-csv", liveTerminals: 1, lastOutput: at(-700), isMain: false, agents: [])
+        ext.external = true; ext.agentNames = ["opencode"]
         live = OrcaLive(worktrees: [
             OrcaWorktree(id: "1", name: "api-login", repo: "web-app", branch: "fix-login", liveTerminals: 1, lastOutput: at(-40), isMain: false, agents: [agent("blocked", 300)]),
             OrcaWorktree(id: "2", name: "checkout", repo: "web-app", branch: "checkout-v2", liveTerminals: 1, lastOutput: at(-3), isMain: false, agents: [agent("working", 720)]),
             OrcaWorktree(id: "3", name: "search", repo: "web-app", branch: "search-index", liveTerminals: 2, lastOutput: at(-1), isMain: false, agents: [agent("working", 1500)]),
-            OrcaWorktree(id: "4", name: "docs", repo: "docs", branch: "main", liveTerminals: 1, lastOutput: at(-5400), isMain: true, agents: [agent("done", 5400)]),
+            OrcaWorktree(id: "4", name: "main", repo: "docs", branch: "main", liveTerminals: 1, lastOutput: at(-5400), isMain: true, agents: [agent("done", 5400)]),
+            ext,
             OrcaWorktree(id: "5", name: "billing", repo: "web-app", branch: "billing", liveTerminals: 0, lastOutput: at(-90000), isMain: false, agents: []),
         ], at: t)
         liveAt = t
