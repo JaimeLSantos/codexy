@@ -65,6 +65,32 @@ enum Snapshot {
             m.warmup(sc.ticks)
             models.append((sc.name, m))
         }
+        if Pets.current()?.id == "theo" {
+            let m = SceneModel(seed: 1)
+            m.clock = at(23); m.skySim.forceWeather = 0
+            m.clawd.observe(MascotInput())
+            for tick in 1...80 {
+                m.tickOnce()
+                if [1, 15, 30, 45, 80].contains(tick) {
+                    write(SceneCanvas(scene: m).frame(width: 272, height: 56).background(T.bg), "\(dir)/home-in-\(tick).png")
+                }
+            }
+            for effect in ["z", "sweat", "bubble", "heart"] {
+                m.mascot.zzz = effect == "z" ? 0.25 : nil
+                m.mascot.sweat = effect == "sweat" ? 0.25 : nil
+                m.mascot.bubble = effect == "bubble" ? "?" : ""
+                m.mascot.love = effect == "heart" ? 0.25 : nil
+                write(SceneCanvas(scene: m).frame(width: 272, height: 56).background(T.bg), "\(dir)/home-\(effect).png")
+            }
+            var awake = MascotInput(); awake.sessions = 1; awake.busy = 1
+            m.clawd.observe(awake)
+            for tick in 1...60 {
+                m.tickOnce()
+                if [1, 5, 10, 20, 40, 60].contains(tick) {
+                    write(SceneCanvas(scene: m).frame(width: 272, height: 56).background(T.bg), "\(dir)/home-out-\(tick).png")
+                }
+            }
+        }
         let sheet = VStack(alignment: .leading, spacing: 6) {
             ForEach(models.indices, id: \.self) { i in
                 VStack(alignment: .leading, spacing: 1) {

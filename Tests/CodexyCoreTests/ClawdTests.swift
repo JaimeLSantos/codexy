@@ -47,6 +47,44 @@ final class ClawdTests: XCTestCase {
         XCTAssertEqual(o.frame.eyes, "closed")
     }
 
+    func testHomePetShrinksNearTheDoorAndGrowsBack() {
+        let span = 200 - Mascot.width, door = Mascot.homeX(span: span)
+        XCTAssertEqual(Mascot.homeProgress(x: door, span: span), 1, accuracy: 1e-9)
+        XCTAssertEqual(Mascot.homeProgress(x: door - Mascot.homeZone, span: span), 0, accuracy: 1e-9)
+        XCTAssertEqual(Mascot.homeProgress(x: 0, span: span), 0)
+        XCTAssertEqual(Mascot.homeSize(0), 1)
+        XCTAssertEqual(Mascot.homeSize(1), Mascot.homeScale, accuracy: 1e-9)
+        // going in and coming out are the same curve
+        XCTAssertEqual(Mascot.homeProgress(x: door - 15, span: span), Mascot.homeProgress(x: door + 15, span: span), accuracy: 1e-9)
+        // closer to the door is never bigger
+        var last = 1.0
+        for d in stride(from: Mascot.homeZone, through: 0, by: -2.5) {
+            let s = Mascot.homeSize(Mascot.homeProgress(x: door - d, span: span))
+            XCTAssertLessThanOrEqual(s, last + 1e-9); last = s
+        }
+    }
+
+    func testHomeSizeStaysContinuousWhenWakingAndWalkingOut() {
+        let m = Mascot(seed: 1, entrance: false)
+        m.home = true
+        m.observe(MascotInput())
+        for _ in 0..<400 { _ = m.step(areaWidth: 200, mouseLook: nil) }
+        var awake = MascotInput(); awake.sessions = 1; awake.busy = 1
+        m.observe(awake)
+        var last = Mascot.homeScale
+        var grew = false
+        for _ in 0..<150 {
+            let o = m.step(areaWidth: 200, mouseLook: nil)
+            let size = Mascot.homeSize(Mascot.homeProgress(x: o.x, span: 200 - Mascot.width))
+            XCTAssertLessThan(abs(size - last), 0.03)
+            XCTAssertGreaterThanOrEqual(size, Mascot.homeScale)
+            XCTAssertLessThanOrEqual(size, 1)
+            grew = grew || size == 1
+            last = size
+        }
+        XCTAssertTrue(grew)
+    }
+
     func testSkinParse() throws {
         let s = try XCTUnwrap(SkinParser.parse("---\nname: Hat\nr: #DC2626\n---\n..r\n.rr\n", id: "Hat"))
         XCTAssertEqual(s.layers.count, 1)

@@ -74,6 +74,16 @@ public final class Mascot {
     static let burrowDig = 4
     /// Where a mascot with a home stands to sleep: this far in from the right end of the area (the mask fades the edge).
     public static func homeX(span: Double) -> Double { max(0, span - 26) }
+    /// A mascot with a home shrinks as it nears the door (it is walking away from us, into the house) and grows again as it leaves.
+    /// Size depends only on the distance to `homeX`, so going in and coming out are the same curve backwards.
+    public static let homeScale = 0.62, homeZone = 40.0
+    /// 0 far from the door .. 1 at the door; smoothstep.
+    public static func homeProgress(x: Double, span: Double) -> Double {
+        let t = max(0, 1 - abs(x - homeX(span: span)) / homeZone)
+        return t * t * (3 - 2 * t)
+    }
+    /// Size factor (1 ... `homeScale`) for a `homeProgress` value.
+    public static func homeSize(_ progress: Double) -> Double { 1 - (1 - homeScale) * progress }
 
     /// Set for a mascot with a doghouse: asleep or dozing he walks home instead of burrowing.
     public var home = false
