@@ -12,8 +12,9 @@ Track your 5-hour and weekly limits, see which Codex sessions need you, and keep
 <p align="center">
   <a href="https://github.com/juliobianco/codexy/releases/latest">Download for macOS</a> ·
   <a href="#install">Install</a> ·
-  <a href="docs/STATUS.md">Status</a> ·
-  <a href="CHANGELOG.md">Changelog</a>
+  <a href="docs/GUIDE.md">User guide</a> ·
+  <a href="CHANGELOG.md">Changelog</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
 </p>
 
 Built from [Claudy Usage](https://github.com/juliobianco/claudy-usage-mac), the same widget for Claude Code, with English and Brazilian Portuguese support.
@@ -87,7 +88,12 @@ Location is optional and only used for the weather behind Theo. You can decline 
 | **Theo and the sky** | Four pixel mascots (Theo, Bit, Coruja and Livrinho), themes, local weather, sunrise, sunset and moon phases. Draw your own as a text file. |
 | **Status and updates** | OpenAI status for Codex with the affected components, a warning when the usage read keeps failing, plan information, and the Codex version with a notice when a newer one is out. |
 
-Screenshots use demo data. See [docs/CREATING-ART.md](docs/CREATING-ART.md) to draw your own mascot.
+<p align="center">
+  <img src="docs/images/floating.gif" width="300" alt="Floating widget opening, folding into a bubble and expanding again">
+  <img src="docs/images/tour.gif" width="300" alt="Theo working, celebrating a finished session and waiting for input">
+</p>
+
+Screenshots use demo data; animations use scripted data. Explore the [full guide](docs/GUIDE.md) for more screenshots, settings, the mascots' moods and [your own mascot](docs/CREATING-ART.md).
 
 ## Privacy and security
 
@@ -118,13 +124,18 @@ There is no automatic self-update. See the [changelog](CHANGELOG.md) for release
 | **A session is missing** | Only threads Codex has loaded (its app-server) or has a session file open for appear. |
 | **No extra limits or credits row** | They appear only when Codex reports them for your plan. |
 
+More diagnostics and known limitations are in the [guide](docs/GUIDE.md#troubleshooting). Real-use checks still open are in [docs/STATUS.md](docs/STATUS.md) and the [roadmap](ROADMAP.md).
+
 ## Development and contributing
 
-Bug reports and code contributions are welcome.
+Mascots, translations, bug reports and code contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) for build and test commands.
 
-- [Status and backlog](docs/STATUS.md) — what is done, what was checked live and what is next.
+- [User guide](docs/GUIDE.md) — detailed features, settings, animations and troubleshooting.
 - [Developer reference](CLAUDE.md) — source layout, build commands and implementation notes.
+- [Screenshot and GIF tools](docs/GUIDE.md#development) — generate images with demo data.
 - [Creating art](docs/CREATING-ART.md) — your own mascot as a text file.
+- [Roadmap](ROADMAP.md) — planned work.
+- [Status and backlog](docs/STATUS.md) — what is done, what was checked live and what is next.
 
 ## Credits and license
 
