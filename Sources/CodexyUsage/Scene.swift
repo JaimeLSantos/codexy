@@ -151,6 +151,7 @@ final class SceneModel {
     func tickOnce() {
         let s = Self.scale
         let areaW = (size.width - Self.areaLeft) / s
+        clawd.home = pet?.id == "theo"
         mascot = clawd.step(areaWidth: areaW, mouseLook: mouseLook)
         stillTicks = mascot.frame.feet == "both" && mascot.lift == 0 ? stillTicks + 1 : 0
         sky = skySim.step(w: size.width / s, h: size.height / s, lon: lon, now: clock ?? Date())
@@ -280,6 +281,16 @@ struct SceneCanvas: View {
             let px4 = Clawd.pixels(m.frame, skin: skin)
             let top = h + Mascot.sink - m.lift - Double(Clawd.H) * py
             let ox = ax + m.x
+            if pet?.id == "theo" {
+                // Theo's doghouse: he stands in the doorway to sleep. Drawn before him, so he walks past in front of it.
+                let L = ax + Mascot.homeX(span: w - ax - Mascot.width) - 3
+                ctx.fill(Path(CGRect(x: L, y: h - 26, width: 44, height: 26)), with: .color(Color(hex: 0x8B5E3C)))
+                ctx.fill(Path(CGRect(x: L + 3, y: h - 24, width: 36, height: 24)), with: .color(Color(hex: 0x1F1612)))
+                var roof = Path()
+                roof.move(to: CGPoint(x: L - 3, y: h - 26)); roof.addLine(to: CGPoint(x: L + 22, y: h - 42)); roof.addLine(to: CGPoint(x: L + 47, y: h - 26))
+                roof.closeSubpath()
+                ctx.fill(roof, with: .color(Color(hex: 0x7A2E2E)))
+            }
             ctx.drawLayer { l in
                 func f(_ rects: [PRect], _ c: Color) {
                     var p = Path()
