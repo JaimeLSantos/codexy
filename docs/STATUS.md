@@ -1,6 +1,6 @@
 # Status
 
-Last review: 2026-10-22 (night). Released 0.1.0 (GitHub + cask `juliobianco/tap/codexy`); 0.2.0 adds the tokens window and exact session state. Updates: `brew upgrade --cask codexy` (no self-update, same as Claudy). 62 tests, CI green.
+Last review: 2026-10-23. Release 0.2.1 includes Theo’s pixel-art doghouse, smooth size/pose changes at the door, scaled effects, and the dashboard validation/backlog documentation. The 0.2.0 tokens window and exact session state remain available. Updates: `brew upgrade --cask codexy` (no self-update, same as Claudy). 65 tests passed locally; live-data coverage gaps are recorded in [USAGE-VALIDATION.md](USAGE-VALIDATION.md).
 
 ## Done (0.1.0)
 - SwiftPM package `CodexyCore` / `CodexyUsage` / `CodexyCoreTests`, copied from Claudy's provider-neutral code.
@@ -73,6 +73,8 @@ Later:
 Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}` are still on GitHub (can be deleted).
 
 ## Next (proposed order)
+Dashboard priority (2026-10-23): follow the six-item checklist in [ROADMAP.md](../ROADMAP.md#usage-dashboard-execution-order): real-data validation → Details discovery → missing/partial-data states → direct tokens access → skills/plugins/MCP source investigation → supported read-only section. Item 1 has a partial local audit; its remaining checks and items 2–6 are pending; the existing dashboard is implemented, and the new section depends on verified data sources. [Local audit](USAGE-VALIDATION.md): four anonymised sessions matched an independent token/turn count; 24h/7d Details, heatmap and 7/30-day Tokens rendered with real data. TUI detected; live VS Code/desktop coverage and weights versus the quota remain unverified. No production code changed. The remaining work below follows that dashboard sequence.
+
 1. The checks above that only the owner can do (waiting with approvals on, project weights vs the 5h bar, credits and extra limits with real values, the Codex desktop app).
 2. `~/.codex/config.toml` view (read-only first).
 3. Side poses and accessories for the other mascots.

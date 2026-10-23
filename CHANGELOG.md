@@ -1,7 +1,11 @@
 # Changelog
 
 ## [Unreleased]
+
+## [0.2.1] - 2026-10-23
 ### Changed
+- Recorded a partial local dashboard validation in `docs/USAGE-VALIDATION.md`: independent counts for four anonymised sessions, real-data chart rendering and remaining client-coverage/quota-calibration checks. No production behaviour changed.
+- Documented the usage dashboard backlog in execution order: validate existing data, improve Details discovery and empty states, expose tokens directly, then investigate and implement supported read-only skills/plugins/MCP information. This is planning only.
 - The doghouse is pixel art on the mascot's grid (about a third lower, shingled roof, plank walls, arched door). Theo shrinks as he walks to it, sleeps inside with his ears visible under the eave and grows back to full size when he leaves. His side pose fades near the door; bubbles, hearts, sweat and z follow his size.
 - Theo no longer burrows: he has a doghouse at the right end of the scene and walks home to sleep (no sessions) or doze (idle 10 min). The other mascots still burrow.
 

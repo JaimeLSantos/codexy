@@ -2,11 +2,24 @@
 
 Where Codexy is going. It is a small project made in the open: the list is short on purpose. What is already done is in the [CHANGELOG](CHANGELOG.md); what was checked with real use, and what was not, is in [docs/STATUS.md](docs/STATUS.md).
 
-**Now** — the app works and has a release ([0.2.0](https://github.com/juliobianco/codexy/releases/tag/v0.2.0)): the 5-hour and weekly limits, the exact state of each session, usage by project and model, a tokens-per-day window, OpenAI status, the floating widget, four mascots, settings in English and Portuguese.
+**Now** — the app works and has a release ([0.2.1](https://github.com/juliobianco/codexy/releases/tag/v0.2.1)): the 5-hour and weekly limits, the exact state of each session, usage by project and model, a tokens-per-day window, OpenAI status, the floating widget, four mascots, settings in English and Portuguese.
+
+## Usage dashboard: execution order
+
+Priority proposed on 2026-10-23 after comparing the panel with Claudy. The charts, project/model shares, heatmap and tokens window already exist; this work validates them and makes them easier to find. Item 1 has a [partial local audit](docs/USAGE-VALIDATION.md); its coverage/calibration checks and items 2–6 remain pending. Start here before the remaining cosmetic work; no release dates are committed.
+
+1. [ ] **Validate the existing dashboard with real data.** **Partial: arithmetic/rendering checked on 2026-10-23; client coverage and quota calibration remain open.** Check 24 hours / 7 days, turns and sessions, projects, models, heatmap and tokens. Compare a small known sample with the local records; check CLI, VS Code and desktop session coverage separately. Done when results and gaps are recorded in `docs/STATUS.md`, including the estimated nature of project/model shares.
+2. [ ] **Make Details easy to discover.** Make the expand/collapse control understandable and check the “Usage details” setting. Decide whether first launch should show Details, preserving an existing user's choice. Done when a new user can find the charts without instructions, in English and Portuguese.
+3. [ ] **Explain missing or partial data.** Distinguish loading, no use in the period, an unavailable data source and quota history that has only just started accumulating. Done when the panel explains each case without presenting missing data as zero use or inventing past limit samples.
+4. [ ] **Put tokens alongside the other usage views.** Add a direct “Tokens per day…” entry in Details, reusing the existing window. Keep the 24-hour / 7-day Details periods and the 7-day / 30-day tokens periods clearly labelled. Done when the user can open tokens from Details and see input, output, cached totals and the local-data scope.
+5. [ ] **Investigate skills, plugins and MCP data sources.** Determine what supported Codex interfaces or local metadata expose, with anonymised examples. Separate installed, enabled/configured and actually used; record coverage, precedence and limitations. Done when there is a documented source for each supported field and a concrete minimum scope for item 6. Configuration inspection must not expose credentials or conversation content.
+6. [ ] **Build the supported read-only skills/plugins/MCP section.** Depends on item 5. Show only fields backed by verified sources; label inventory separately from measured use and explain unavailable data. Done when English/Portuguese copy, source-failure behaviour and checks for the new reader pass. Do not promise Claudy's usage profile where equivalent data has not been established.
+
+Items 1–4 improve features already present. Items 5–6 are new work and depend on the data investigation; they are separate from the general `config.toml` viewer below.
 
 ## Next
 
-Small, clear, and good for a first contribution.
+Other planned work, after the dashboard priorities above. Small, clear, and good for a first contribution.
 
 - **Check it with real use** — what only a person at the keyboard can see: *waiting for you* with approvals on (`codex -a on-request`), reset credits and paid credits with a real value, extra limits on a plan that has them, the project weights against how far the 5-hour bar moved, and the Codex desktop app (whether its threads show).
 - **A `~/.codex/config.toml` view** — read-only first; any write only after a click, keeping comments and order.

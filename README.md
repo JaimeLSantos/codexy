@@ -21,7 +21,7 @@ Built from [Claudy Usage](https://github.com/juliobianco/claudy-usage-mac), the 
 
 > A fan project, unaffiliated with OpenAI. Codex belongs to OpenAI.
 
-**Latest release: [v0.2.0](https://github.com/juliobianco/codexy/releases/tag/v0.2.0).** A tokens-per-day window and the exact state of each session, read from Codex's own app-server. 0.1.0 brought the limits, sessions, usage by project and model, a heatmap, OpenAI status and the Codex version check. See the [release notes](CHANGELOG.md#020---2026-10-22).
+**Latest release: [v0.2.1](https://github.com/juliobianco/codexy/releases/tag/v0.2.1).** Theo sleeps in a smaller pixel-art doghouse, shrinking smoothly near its door; his effects follow his size. Includes the dashboard validation notes and prioritised backlog. The tokens-per-day window and exact session state introduced in 0.2.0 remain available. See the [release notes](CHANGELOG.md#021---2026-10-23).
 
 ## Install
 
