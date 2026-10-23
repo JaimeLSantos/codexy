@@ -56,7 +56,6 @@ Checks (cheap, no code unless they fail):
 
 Limits and data:
 - Keep one `codex app-server` running: measured 2026-10-22, one probe costs ~0.4 s of CPU a minute (about 0.7% of a core). Decided to keep the fresh process per probe; revisit only if it shows up in battery use.
-- Exact "waiting": opt-in Codex `PermissionRequest`/`Stop` hook or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`).
 - `~/.codex/config.toml` editor (like Claudy's `settings.json` tab): read-only view first; any write only after a click, keeping comments and order.
 
 Mascot: see the Mascot section (side poses for Bit, Coruja and Livrinho; accessories; app icon with Theo).

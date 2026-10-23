@@ -4,6 +4,9 @@
 ### Added
 - Tokens per day window (panel menu → "Tokens per day…"): stacked bars by model for 7 or 30 days, with input, output and cached totals per model. Real token counts from the rollout files, the same scan as Details; nothing is read but the counts.
 
+### Changed
+- Running sessions: the state (working, waiting for you, idle) now comes from Codex's own app-server daemon when it is running, instead of a guess from the session file; the guess stays as the fallback. An idle session whose file Codex had closed now shows up too.
+
 ## [0.1.0] - 2026-10-22
 ### Added
 - First version, built from Claudy Usage: Codex 5h and weekly limits in the menu bar and the panel.
