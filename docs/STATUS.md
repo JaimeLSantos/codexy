@@ -31,19 +31,22 @@ Pending:
 - "Waiting for you" is a guess: approval prompts are not written to the file. A shell/patch call with no output, file quiet ≥ 3 s, no process started under codex since the call, and `approval_policy` ≠ never → waiting. `request_user_input` → waiting at once. Known misses: an auto-reviewer thinking for a few seconds looks like a prompt; an MCP tool approval is shown as working.
 
 ## Hidden or stubbed (the provider data is not wired yet)
-- Usage profile (context size, skills, MCP) and the token stats window: Claude-only reports, no Codex counterpart. A tokens-per-day window could be built from the same rollout scan.
+- Usage profile (context size, skills, MCP): a Claude-only report, no Codex counterpart.
 - CLI version/update row: removed (Claudy read `claude --version` and ran `claude update`). Status is back, from OpenAI.
 - Settings: the Claude Code settings editor tab is gone. The Fable toggle is gone (status is back); "Running sessions" and "Plan and account" toggles stay.
 - `Strings.swift`: the Claudy keys for removed features are gone (profile, tokens window, Fable, changes). Keys the tokens window needs are written again when it is built.
 
 ## Checked live vs not checked (as of 2026-10-22, codex-cli 0.163.0, Plus plan)
 - Checked on the owner's Mac: limits from `app-server`; sessions list with a TUI open (1 session, idle, named by its thread title); Details with a real week (turns, sessions, projects, models, heatmap filled).
-- Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path of the project scan (only with sample data: every file of the last 7 days was plain `.jsonl`); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
+- Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path with a real old file (a test now compresses a rollout with `zstd` and scans it; skipped where `zstd` is missing); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
 
 ## Done after the review (branch `claude/extra-limits-version`, not merged)
 - Extra limits (`ExtraLimit`, `reachedType` in `Usage.swift`; `ExtraLimitsLine` in `StatusUI.swift`). Real answer checked 2026-10-22 on Plus: `rateLimitsByLimitId` has only `codex`, `rateLimitReachedType` and `individualLimit` are null, `spendControlReached` false (not read). The extra-bucket and reached lines are tested with fixtures only.
 - Distribution pieces: app icon with Theo (`scripts/make-icon.sh`, `Resources/AppIcon.icns`), `scripts/package.sh` (universal zip + sha256, tested: `x86_64 arm64`), README with pictures from `CODEXY_DEMO=1 ... -language en --readme docs/images` (made-up data). Still to do: release 0.1.0 on GitHub and the cask (both outward, need the owner's go).
 - Codex version (`Version.swift`): `codex --version` plus GitHub `releases/latest` (tag `rust-v0.163.0`), every 6 h, in the Details footer.
+
+## Done after 0.1.0 (branch `claude/tokens-window`)
+- Tokens per day window (`TokensView.swift`, `ProjectUsage.tokens` / `tokenDays` in `History.swift`): the rollout scan also keeps real tokens per hour and model; the window has its own scanner (30 days back) and scans when it opens. Checked live with the owner's 30 days (bars, per-model totals). Local days; models beyond the top 5 go to "other".
 
 ## Pending
 Checks (cheap, no code unless they fail):
@@ -52,7 +55,6 @@ Checks (cheap, no code unless they fail):
 - Project weights: compare a few hours of the scan with how much the 5h bar moved.
 
 Limits and data:
-- Tokens window: tokens per day / per model from the same rollout scan (Claudy's token stats window has no Codex source otherwise).
 - Keep one `codex app-server` running: measured 2026-10-22, one probe costs ~0.4 s of CPU a minute (about 0.7% of a core). Decided to keep the fresh process per probe; revisit only if it shows up in battery use.
 - `~/.codex/config.toml` editor (like Claudy's `settings.json` tab): read-only view first; any write only after a click, keeping comments and order.
 
@@ -69,4 +71,4 @@ Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}`
 ## Next (proposed order for 2026-10-23)
 1. The three checks above (waiting with approvals, desktop app, weights): they decide whether sessions and Details need fixes before a release.
 2. Release 0.1.0 and the cask (icon, package.sh and README are done).
-3. Then: tokens window, `config.toml` editor, side poses and accessories, long-lived app-server.
+3. Then: `config.toml` editor, side poses and accessories, long-lived app-server.

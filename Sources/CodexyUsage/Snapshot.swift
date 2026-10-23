@@ -31,9 +31,11 @@ enum Snapshot {
            let lo = ProcessInfo.processInfo.environment["CODEXY_LON"].flatMap(Double.init) {
             model.scene.skySim.lat = la; model.scene.lon = lo; model.scene.refreshWeather(force: true)
         }
+        model.refreshTokens()
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
             model.scene.warmup(Int(ProcessInfo.processInfo.environment["CODEXY_TICKS"] ?? "") ?? 60)
             write(PanelView(model: model).environment(\.colorScheme, .dark), "\(dir)/panel.png")
+            write(TokensView(model: model).environment(\.colorScheme, .dark), "\(dir)/tokens.png")
             write(MiniBars(session: model.usage?.session?.percent, week: model.usage?.week?.percent, stale: false)
                 .padding(8).background(Color(white: 0.15)), "\(dir)/bar.png")
             exit(0)
