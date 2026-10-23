@@ -16,6 +16,7 @@ Done:
 - Four pets drawn from text files on the 18 x 12 grid: Theo (theo), Bit (bit), Coruja (owl), Livrinho (book). Each has `[normal] [slack] [crit] [sleep]` faces; they reuse the mascot brain (walk, hop, burrow, lie on the back).
 - Theo is the default and first in the list. He is the owner's blue heeler, drawn from his photos (the photos stay out of the repo). The old id `heeler` still maps to him.
 - Theo walks in side view (`[walk1] [walk2]`, mirrored when going left) and sits (`[sit]`) after ~3 s standing still, when idle or when a session waits for you. Side poses are optional per pet.
+- Theo has a doghouse (drawn in `Scene.swift`, only for `theo`): `Mascot.home` makes sleep and doze walk to `Mascot.homeX` instead of burrowing; the others keep burrowing. Sleeping he shows in the doorway; he does not go inside yet (no front-view or lying pose).
 - Picker with a live preview in Settings → Aparência (Look) → Mascote. Own pets: `~/Library/Application Support/Codexy/pets/*.txt` (same id replaces a built-in one).
 - `--pets DIR` renders every pet in every mood and pose; `CODEXY_PET=<id>` previews one in `--scenes`.
 

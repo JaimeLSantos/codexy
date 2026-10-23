@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- Theo no longer burrows: he has a doghouse at the right end of the scene and walks home to sleep (no sessions) or doze (idle 10 min). The other mascots still burrow.
 
 ## [0.2.0] - 2026-10-22
 ### Added

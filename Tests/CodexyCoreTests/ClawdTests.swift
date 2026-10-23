@@ -36,6 +36,17 @@ final class ClawdTests: XCTestCase {
         XCTAssertEqual(m.step(areaWidth: 200, mouseLook: nil).mood, "dead")
     }
 
+    func testHomePetWalksToTheHouseInsteadOfBurrowing() {
+        let m = Mascot(seed: 1, entrance: false)
+        m.home = true
+        m.observe(MascotInput())                                    // no sessions: sleep
+        var o = MascotOut()
+        for _ in 0..<400 { o = m.step(areaWidth: 200, mouseLook: nil) }
+        XCTAssertEqual(o.x, Mascot.homeX(span: 200 - Mascot.width).rounded())
+        XCTAssertEqual(o.frame.dig, 0)
+        XCTAssertEqual(o.frame.eyes, "closed")
+    }
+
     func testSkinParse() throws {
         let s = try XCTUnwrap(SkinParser.parse("---\nname: Hat\nr: #DC2626\n---\n..r\n.rr\n", id: "Hat"))
         XCTAssertEqual(s.layers.count, 1)
