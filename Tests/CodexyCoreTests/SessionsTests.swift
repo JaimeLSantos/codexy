@@ -93,4 +93,19 @@ final class SessionsTests: XCTestCase {
             .write(to: dir.appendingPathComponent("session_index.jsonl"), atomically: true, encoding: .utf8)
         XCTAssertEqual(CodexSessions.threadNames(home: dir.path)["t-1"], "login fix")
     }
+
+    func testDaemonThreadStatus() {
+        typealias D = CodexDaemon
+        XCTAssertEqual(D.state(["type": "idle"]), D.State(busy: false, waiting: false))
+        XCTAssertEqual(D.state(["type": "active", "activeFlags": []]), D.State(busy: true, waiting: false))
+        XCTAssertEqual(D.state(["type": "active", "activeFlags": ["waitingOnApproval"]]), D.State(busy: false, waiting: true))
+        XCTAssertEqual(D.state(["type": "active", "activeFlags": ["waitingOnUserInput"]]), D.State(busy: false, waiting: true))
+        XCTAssertNil(D.state(["type": "notLoaded"]))
+        let th: [String: Any] = ["status": ["type": "idle"], "source": "vscode", "threadSource": "user", "parentThreadId": NSNull(), "cwd": "/demo/web", "name": NSNull()]
+        XCTAssertEqual(D.thread(th), D.Thread(state: D.State(busy: false, waiting: false), cwd: "/demo/web", name: nil, hidden: false))
+        XCTAssertEqual(D.thread(th.merging(["parentThreadId": "p1"]) { $1 })?.hidden, true)        // a sub-agent
+        XCTAssertEqual(D.thread(th.merging(["source": ["subAgent": "review"]]) { $1 })?.hidden, true)
+        // No daemon socket: nil, so the caller keeps the guess from the file.
+        XCTAssertNil(D.threads(home: "/nonexistent-\(UUID())"))
+    }
 }

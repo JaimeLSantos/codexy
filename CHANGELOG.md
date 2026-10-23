@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- Running sessions: the state (working, waiting for you, idle) now comes from Codex's own app-server daemon when it is running, instead of a guess from the session file; the guess stays as the fallback. An idle session whose file Codex had closed now shows up too.
 
 ## [0.1.0] - 2026-10-22
 ### Added
