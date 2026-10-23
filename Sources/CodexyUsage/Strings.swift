@@ -121,7 +121,7 @@ enum L {
             "weather.manual": "Fixed place", "weather.lat": "Latitude", "weather.lon": "Longitude",
             "set.history": "7-day history", "history.clear": "Clear", "history.clear.tip": "Forget the saved 5h and week samples",
             "hist.samples": "%d samples", "set.files": "Files", "open.log": "Open log", "open.data": "Open data folder",
-            "set.about": "Codexy %@ · built on Claudy and clawd-usage-winwidget (MIT). Not made by OpenAI. Clawd is Anthropic's, a placeholder here.",
+            "set.about": "Codexy %@ · built on Claudy and clawd-usage-winwidget (MIT). Not made by OpenAI.",
             "set.moreHint": "The rest of Claude Code's settings (hooks, permissions, plugins, env) are in settings.json",
         ],
         "pt": [
@@ -206,7 +206,7 @@ enum L {
             "weather.manual": "Local fixo", "weather.lat": "Latitude", "weather.lon": "Longitude",
             "set.history": "Histórico de 7 dias", "history.clear": "Apagar", "history.clear.tip": "Esquecer as amostras salvas de 5h e semana",
             "hist.samples": "%d amostras", "set.files": "Arquivos", "open.log": "Abrir o log", "open.data": "Abrir a pasta de dados",
-            "set.about": "Codexy %@ · feito sobre o Claudy e o clawd-usage-winwidget (MIT). Não é da OpenAI. Clawd é da Anthropic, provisório aqui.",
+            "set.about": "Codexy %@ · feito sobre o Claudy e o clawd-usage-winwidget (MIT). Não é da OpenAI.",
             "set.moreHint": "O resto das configurações do Claude Code (hooks, permissões, plugins, env) fica no settings.json",
         ],
     ]
