@@ -1,8 +1,8 @@
 # Status
 
-Last review: 2026-10-22. `main` has PRs #1 (running sessions), #2 (status and credits), #3 (projects, models, heatmap) and #4 (mascot notes). 57 tests, CI (macOS runner) green on every PR. No open PRs or issues. Released 0.1.0 on 2026-10-22 (GitHub release + cask `juliobianco/tap/codexy`).
+Last review: 2026-10-22 (night). Released 0.1.0 (GitHub + cask `juliobianco/tap/codexy`); 0.2.0 adds the tokens window and exact session state. Updates: `brew upgrade --cask codexy` (no self-update, same as Claudy). 62 tests, CI green.
 
-## Done (0.1.0, unreleased)
+## Done (0.1.0)
 - SwiftPM package `CodexyCore` / `CodexyUsage` / `CodexyCoreTests`, copied from Claudy's provider-neutral code.
 - Codex reader (`Usage.swift`): `codex app-server` → `account/rateLimits/read`; fallback to the last `token_count` event of the newest rollout file (plain or `.zst`). Tests with anonymised fixtures.
 - Panel: 5h hero + bar, reset time, pace, week row, plan in the footer, 24h / week chart. Menu bar: two mini bars 5h / W.
@@ -40,13 +40,16 @@ Pending:
 - Checked on the owner's Mac: limits from `app-server`; sessions list with a TUI open (1 session, idle, named by its thread title); Details with a real week (turns, sessions, projects, models, heatmap filled).
 - Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path with a real old file (a test now compresses a rollout with `zstd` and scans it; skipped where `zstd` is missing); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
 
-## Done after the review (branch `claude/extra-limits-version`, not merged)
+## Done (0.1.0, added just before the release)
 - Extra limits (`ExtraLimit`, `reachedType` in `Usage.swift`; `ExtraLimitsLine` in `StatusUI.swift`). Real answer checked 2026-10-22 on Plus: `rateLimitsByLimitId` has only `codex`, `rateLimitReachedType` and `individualLimit` are null, `spendControlReached` false (not read). The extra-bucket and reached lines are tested with fixtures only.
 - Distribution pieces: app icon with Theo (`scripts/make-icon.sh`, `Resources/AppIcon.icns`), `scripts/package.sh` (universal zip + sha256, tested: `x86_64 arm64`), README with pictures from `CODEXY_DEMO=1 ... -language en --readme docs/images` (made-up data). Still to do: release 0.1.0 on GitHub and the cask (both outward, need the owner's go).
 - Codex version (`Version.swift`): `codex --version` plus GitHub `releases/latest` (tag `rust-v0.163.0`), every 6 h, in the Details footer.
 
-## Done after 0.1.0 (branch `claude/tokens-window`)
+## Done in 0.2.0
 - Tokens per day window (`TokensView.swift`, `ProjectUsage.tokens` / `tokenDays` in `History.swift`): the rollout scan also keeps real tokens per hour and model; the window has its own scanner (30 days back) and scans when it opens. Checked live with the owner's 30 days (bars, per-model totals). Local days; models beyond the top 5 go to "other".
+- Exact session state from the app-server daemon (`CodexDaemon.swift`): the TUI starts `codex app-server --listen unix://`, its socket `~/.codex/app-server-control/app-server-control.sock` speaks WebSocket JSON-RPC. `thread/loaded/list` + `thread/read` (no turns) give `status`: idle | active with `activeFlags` (`waitingOnApproval`, `waitingOnUserInput`). Used when the socket answers (2 s limit), else the old guess from the rollout file. Checked live 2026-10-22: it answers and lists an idle TUI thread. Not checked: an active thread with a flag (needs approvals on).
+- Threads the daemon holds but no process has a rollout file open for (an idle TUI between turns closes it: the session was missing before) are listed too, `pid` 0; sub-agents, reviews and ephemeral threads are hidden. The Codex desktop app is not installed on this Mac, so whether it uses the same daemon is unknown.
+- `.zst` rollout path tested end to end (a test compresses a rollout with `zstd`; skipped where it is missing).
 
 ## Pending
 Checks (cheap, no code unless they fail):
@@ -68,7 +71,8 @@ Later:
 
 Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}` are still on GitHub (can be deleted).
 
-## Next (proposed order for 2026-10-23)
-1. The three checks above (waiting with approvals, desktop app, weights): they decide whether sessions and Details need fixes before a release.
-2. Release 0.1.0 and the cask (icon, package.sh and README are done).
-3. Then: `config.toml` editor, side poses and accessories, long-lived app-server.
+## Next (proposed order)
+1. The checks above that only the owner can do (waiting with approvals on, project weights vs the 5h bar, credits and extra limits with real values, the Codex desktop app).
+2. `~/.codex/config.toml` view (read-only first).
+3. Side poses and accessories for the other mascots.
+4. Notarization, if an Apple Developer account appears.
