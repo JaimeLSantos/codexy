@@ -65,6 +65,7 @@ public final class RolloutScanner: @unchecked Sendable {
         var hour: Int
         var family: String
         var weight: Double
+        var raw: TokenCount
         var key: String          // the thread's running totals: a fork copies them, so a copy is counted once
     }
 
@@ -219,7 +220,8 @@ public final class RolloutScanner: @unchecked Sendable {
         let family = CodexModel.key(c.model)
         let hour = Int(at.timeIntervalSince1970 / 3600)
         let key = "\(Int(total.input))/\(Int(total.cached))/\(Int(total.output))/\(Int(total.total))"
-        c.events.append(Event(hour: hour, family: family, weight: delta.weight * CodexModel.factor(family), key: key))
+        c.events.append(Event(hour: hour, family: family, weight: delta.weight * CodexModel.factor(family),
+                              raw: TokenCount(input: delta.input, cached: delta.cached, output: delta.output), key: key))
         c.lastHour = max(c.lastHour ?? hour, hour)
     }
 
@@ -234,6 +236,7 @@ public final class RolloutScanner: @unchecked Sendable {
             var used = false
             for e in c.events where e.hour >= firstHour && keys.insert(e.key).inserted {
                 r.hourly[e.hour, default: [:]][name, default: [:]][e.family, default: 0] += e.weight
+                r.tokens[e.hour, default: [:]][e.family, default: TokenCount()] += e.raw
                 used = true
             }
             for t in c.turns where t.hour >= firstHour {

@@ -63,6 +63,29 @@ final class ProjectsTests: XCTestCase {
         XCTAssertEqual(s.scan(home: home, since: since).total["web-app"] ?? 0, 1620, accuracy: 0.001)
     }
 
+    func testTokensPerDayByModel() throws {
+        let home = try makeHome()
+        try write(home, "rollout-2026-10-19T14-00-00-a.jsonl", [
+            meta("2026-10-19T14:00:00.000Z", id: "t1", cwd: "/demo/web"),
+            turn("2026-10-19T14:00:01.000Z", model: "gpt-5.1-codex", id: "u1"),
+            count("2026-10-19T14:01:00.000Z", total: (1000, 200, 100), last: (1000, 200, 100)),
+            count("2026-10-19T14:01:01.000Z", total: (1000, 200, 100), last: (1000, 200, 100)),    // sent again
+            turn("2026-10-19T14:02:00.000Z", model: "gpt-5.1-codex-mini", id: "u2"),
+            count("2026-10-19T14:03:00.000Z", total: (1500, 300, 150), last: (500, 100, 50)),
+        ])
+        let u = RolloutScanner().scan(home: home, since: since)
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
+        let now = CodexParser.iso("2026-10-20T10:00:00Z")!
+        let d = u.tokenDays(days: 2, maxModels: 1, now: now, calendar: cal)
+        XCTAssertEqual(d.days.count, 2)
+        // The biggest model keeps its line; the other goes to "other". Total is input + output.
+        XCTAssertEqual(d.lines.map(\.key), ["gpt-5.1-codex", "other"])
+        XCTAssertEqual(d.lines[0].values, [1100, 0])
+        XCTAssertEqual(d.lines[1].values, [550, 0])
+        XCTAssertEqual(d.totals["gpt-5.1-codex"], TokenCount(input: 1000, cached: 200, output: 100))
+        XCTAssertEqual(d.totals["other"], TokenCount(input: 500, cached: 100, output: 50))
+    }
+
     func testCountsDeltasOnceAndNamesTheProject() throws {
         let home = try makeHome()
         try write(home, "rollout-2026-10-19T14-00-00-a.jsonl", [

@@ -19,6 +19,9 @@ final class AppModel {
     /// Projects, models and turns of the last 7 days, from Codex's rollout files. nil until the first scan.
     var projects: ProjectUsage?
     @ObservationIgnored private let scanner = RolloutScanner()
+    @ObservationIgnored private let tokenScanner = RolloutScanner()      // its own cache: it looks 30 days back, the other 7
+    var tokenUsage: ProjectUsage?
+    @ObservationIgnored private var scanningTokens = false
     @ObservationIgnored private var scanningProjects = false
     @ObservationIgnored private var scannedAt = Date.distantPast
     var now = Date()
@@ -148,6 +151,17 @@ final class AppModel {
         Task.detached(priority: .utility) {
             let r = scanner.scan(since: Date().addingTimeInterval(-7 * 86400))
             await MainActor.run { self.projects = r; self.scannedAt = Date(); self.scanningProjects = false }
+        }
+    }
+
+    /// The token window: the last 30 days, when it opens. Not on a timer.
+    func refreshTokens() {
+        guard !DevFlags.demo, !scanningTokens else { return }
+        scanningTokens = true
+        let scanner = tokenScanner
+        Task.detached(priority: .utility) {
+            let r = scanner.scan(since: Date().addingTimeInterval(-30 * 86400))
+            await MainActor.run { self.tokenUsage = r; self.scanningTokens = false }
         }
     }
 
