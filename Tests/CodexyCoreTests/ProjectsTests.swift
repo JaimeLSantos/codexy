@@ -43,6 +43,26 @@ final class ProjectsTests: XCTestCase {
     // A message that quotes the markers: escaped inside the JSON string, so it must never be read as one.
     let chatter = #"{"timestamp":"2026-10-19T14:00:30.000Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"{\"type\":\"event_msg\",\"payload\":{\"type\":\"token_count\"}} {\"type\":\"turn_context\"}"}]}}"#
 
+    func testCompressedRolloutIsReadOnce() throws {
+        guard let zstd = CodexCLI.zstd else { throw XCTSkip("zstd not installed") }
+        let home = try makeHome()
+        let name = "rollout-2026-10-19T14-00-00-z.jsonl"
+        try write(home, name, [
+            meta("2026-10-19T14:00:00.000Z", id: "z1", cwd: "/demo/web", repo: "git@github.com:me/web-app.git"),
+            turn("2026-10-19T14:00:01.000Z", model: "gpt-5.1-codex", id: "u1"),
+            count("2026-10-19T14:01:00.000Z", total: (1000, 200, 100), last: (1000, 200, 100)),
+        ])
+        let path = home + "/sessions/2026/10/19/" + name
+        XCTAssertNotNil(CodexCLI.run(zstd, ["-q", "--rm", path, "-o", path + ".zst"]))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: path))
+        let s = RolloutScanner()
+        let u = s.scan(home: home, since: since)
+        XCTAssertEqual(u.total["web-app"] ?? 0, 1620, accuracy: 0.001)    // (1000-200) + 0.1*200 + 8*100
+        XCTAssertEqual(u.turnCount(), 1)
+        // Unchanged: the same answer without reading it again.
+        XCTAssertEqual(s.scan(home: home, since: since).total["web-app"] ?? 0, 1620, accuracy: 0.001)
+    }
+
     func testCountsDeltasOnceAndNamesTheProject() throws {
         let home = try makeHome()
         try write(home, "rollout-2026-10-19T14-00-00-a.jsonl", [
