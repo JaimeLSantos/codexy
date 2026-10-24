@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-23
+### Changed
+- Usage Details has a labelled expand/collapse row below status and a direct “Tokens per day…” entry; saved visibility preferences are preserved.
+- Activity and tokens distinguish loading, no recorded use, unavailable files and partial reads. Limits charts explain first samples, short history, gaps and the weekly quota cycle.
+
 ## [0.2.1] - 2026-10-23
 ### Changed
 - Recorded a partial local dashboard validation in `docs/USAGE-VALIDATION.md`: independent counts for four anonymised sessions, real-data chart rendering and remaining client-coverage/quota-calibration checks. No production behaviour changed.

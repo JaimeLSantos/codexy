@@ -92,6 +92,8 @@ public struct TokenDays: Equatable, Sendable {
 }
 
 public struct ProjectUsage: Equatable, Sendable {
+    /// Some session files could not be read; the available counts may be incomplete.
+    public var incomplete = false
     /// unix hour -> project -> model family -> weight. Everything below is a sum over this.
     public var hourly: [Int: [String: [String: Double]]] = [:]
     public var paths: [String: String] = [:]            // project -> folder, for the hover text

@@ -21,6 +21,16 @@ struct PanelView: View {
             CreditsLine(model: model).padding(.top, 6)
             if prefs.showSessions, !model.sessions.isEmpty { sessionsRow.padding(.top, 11) }
             if prefs.showStatus { StatusRow(model: model).padding(.top, 10) }
+            if prefs.showDetails {
+                Button { detailsOpen.toggle() } label: {
+                    Label(L.t("details"), systemImage: detailsOpen ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 10.5)).foregroundStyle(T.accent)
+                        .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(L.t(detailsOpen ? "details.hide" : "details.show"))
+                .padding(.top, 10)
+            }
             if detailsOpen && prefs.showDetails { DetailsView(model: model).padding(.top, 12) }
             footer.padding(.top, 8)
         }
@@ -49,9 +59,6 @@ struct PanelView: View {
                 FloatingWidget.shared.show(model: model, from: from)
                 NSApp.keyWindow?.close()
             }.padding(.trailing, 9)
-            if prefs.showDetails {
-                iconButton(detailsOpen ? "▴" : "▾", help: L.t("details")) { detailsOpen.toggle() }.padding(.trailing, 9)
-            }
             MoreMenu(model: model)
         }
     }
@@ -225,6 +232,7 @@ struct SessionRow: View {
 // ponytail: Claudy's usage profile (context size, skills, MCP) comes from Claude's /usage; Codex has no such report.
 struct DetailsView: View {
     let model: AppModel
+    @Environment(\.openWindow) private var openWindow
     @AppStorage("period") private var period = "day"
 
     var body: some View {
@@ -241,6 +249,15 @@ struct DetailsView: View {
                 HistoryChart(model: model, mode: period == "day" ? .day : .week)
             }
             ActivityView(model: model, period: period)
+            Button {
+                openWindow(id: "tokens")
+                NSApp.activate(ignoringOtherApps: true)
+            } label: {
+                Label(L.t("tokens.menu"), systemImage: "chart.bar.xaxis")
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(T.accent)
+            }
+            .buttonStyle(.plain)
         }
     }
 

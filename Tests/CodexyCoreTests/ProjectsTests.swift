@@ -165,6 +165,41 @@ final class ProjectsTests: XCTestCase {
         XCTAssertEqual(u.sessionCount(), 0)
     }
 
+    func testMissingSourceIsDifferentFromAnEmptyReadableSource() throws {
+        let home = try makeHome()
+        XCTAssertFalse(RolloutScanner().scan(home: home, since: since).incomplete)
+        XCTAssertTrue(RolloutScanner().scan(home: home + "/missing", since: since).incomplete)
+    }
+
+    func testEmptyCompressedFileIsAReadFailureButAnEmptyLiveFileIsNot() throws {
+        let home = try makeHome()
+        try write(home, "rollout-live.jsonl", [])
+        XCTAssertFalse(RolloutScanner().scan(home: home, since: since).incomplete)
+        try write(home, "rollout-empty.jsonl.zst", [])
+        XCTAssertTrue(RolloutScanner().scan(home: home, since: since).incomplete)
+    }
+
+    func testReadFailureKeepsValidCountsAndClearsAfterRecovery() throws {
+        let home = try makeHome()
+        try write(home, "rollout-good.jsonl", [
+            meta("2026-10-19T14:00:00Z", id: "good", cwd: "/demo/web"),
+            turn("2026-10-19T14:00:01Z", model: "gpt-5.1-codex", id: "u1"),
+            count("2026-10-19T14:01:00Z", total: (1000, 200, 100), last: (1000, 200, 100)),
+        ])
+        try write(home, "rollout-broken.jsonl.zst", ["not a zstd file"])
+        let scanner = RolloutScanner()
+        let partial = scanner.scan(home: home, since: since)
+        XCTAssertTrue(partial.incomplete)
+        XCTAssertEqual(partial.turnCount(), 1)
+        XCTAssertEqual(partial.total["web"], 1620)
+        let broken = home + "/sessions/2026/10/19/rollout-broken.jsonl.zst"
+        try FileManager.default.removeItem(atPath: broken)
+        let recovered = scanner.scan(home: home, since: since)
+        XCTAssertFalse(recovered.incomplete)
+        XCTAssertEqual(recovered.tokens, partial.tokens)
+        XCTAssertEqual(recovered.turnCount(), partial.turnCount())
+    }
+
     func testNames() {
         XCTAssertEqual(CodexModel.key("GPT-5-2025-08-07"), "gpt-5")
         XCTAssertEqual(CodexModel.key(""), "other")

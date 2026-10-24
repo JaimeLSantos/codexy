@@ -66,6 +66,15 @@ enum L {
             
             
             
+            "details.show": "Show usage details", "details.hide": "Hide usage details",
+            "activity.none": "No recorded Codex activity in this period on this Mac.",
+            "activity.unavailable": "Local session files could not be read. Usage is unavailable; try opening this view again.",
+            "activity.partial": "Some session files could not be read. These totals may be incomplete.",
+            "hist.waiting": "Waiting for the first limit sample. History is saved while Codexy runs.",
+            "hist.unavailable": "Limits could not be read. Refresh from the menu to try again.",
+            "hist.shortNote": "History is still building. Only samples saved while Codexy runs are shown.",
+            "hist.recordingNote": "History is saved while Codexy runs; gaps mean there are no samples.",
+            "hist.cycleNote": "This chart follows your weekly quota reset, not the last seven days. History is saved while Codexy runs.",
             "details": "Details", "period.day": "24 hours", "period.week": "7 days", "thisComputer": "this computer",
             "thisComputer.tip": "Counted from the Codex session files on this Mac. It leaves out other devices, Codex cloud and ChatGPT.",
             
@@ -152,6 +161,15 @@ enum L {
             
             
             
+            "details.show": "Mostrar detalhes de uso", "details.hide": "Ocultar detalhes de uso",
+            "activity.none": "Nenhuma atividade registrada do Codex neste período neste Mac.",
+            "activity.unavailable": "Não foi possível ler os arquivos locais de sessão. Uso indisponível; tente abrir esta tela novamente.",
+            "activity.partial": "Alguns arquivos de sessão não puderam ser lidos. Estes totais podem estar incompletos.",
+            "hist.waiting": "Aguardando a primeira amostra dos limites. O histórico é salvo enquanto o Codexy está aberto.",
+            "hist.unavailable": "Não foi possível ler os limites. Atualize pelo menu para tentar novamente.",
+            "hist.shortNote": "O histórico ainda está sendo formado. Só aparecem amostras salvas enquanto o Codexy está aberto.",
+            "hist.recordingNote": "O histórico é salvo enquanto o Codexy está aberto; intervalos vazios indicam falta de amostras.",
+            "hist.cycleNote": "Este gráfico acompanha o reset da cota semanal, não os últimos sete dias. O histórico é salvo enquanto o Codexy está aberto.",
             "details": "Detalhes", "period.day": "24 horas", "period.week": "7 dias", "thisComputer": "este computador",
             "thisComputer.tip": "Contado dos arquivos de sessão do Codex neste Mac. Não inclui outros aparelhos, o Codex na nuvem nem o ChatGPT.",
             

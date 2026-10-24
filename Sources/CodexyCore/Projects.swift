@@ -118,43 +118,53 @@ public final class RolloutScanner: @unchecked Sendable {
     }
 
     /// Every rollout file under the Codex folder, live and archived.
-    static func files(home: String) -> [String] {
+    static func files(home: String) -> (paths: [String], incomplete: Bool) {
         let fm = FileManager.default
-        var out: [String] = []
+        var out: [String] = [], foundRoot = false, incomplete = false
         for sub in ["sessions", "archived_sessions"] {
-            let root = home + "/" + sub
-            guard let en = fm.enumerator(atPath: root) else { continue }
-            for case let rel as String in en where (rel as NSString).lastPathComponent.hasPrefix("rollout-")
-                && (rel.hasSuffix(".jsonl") || rel.hasSuffix(".jsonl.zst")) {
-                out.append(root + "/" + rel)
+            let root = URL(fileURLWithPath: home + "/" + sub)
+            guard fm.fileExists(atPath: root.path) else { continue }
+            foundRoot = true
+            guard let en = fm.enumerator(at: root, includingPropertiesForKeys: nil, errorHandler: { _, _ in
+                incomplete = true
+                return true
+            }) else { incomplete = true; continue }
+            for case let url as URL in en where url.lastPathComponent.hasPrefix("rollout-")
+                && (url.path.hasSuffix(".jsonl") || url.path.hasSuffix(".jsonl.zst")) {
+                out.append(url.path)
             }
         }
-        return out
+        return (out, incomplete || !foundRoot)
     }
 
     public func scan(home: String = CodexCLI.home, since: Date, now: Date = Date()) -> ProjectUsage {
         lock.lock(); defer { lock.unlock() }
         let fm = FileManager.default
         var seen = Set<String>()
-        for path in Self.files(home: home) {
+        let files = Self.files(home: home)
+        var incomplete = files.incomplete
+        for path in files.paths {
             guard let attrs = try? fm.attributesOfItem(atPath: path),
-                  let mod = attrs[.modificationDate] as? Date, mod >= since,
-                  let size = (attrs[.size] as? NSNumber)?.uint64Value else { continue }
+                  let mod = attrs[.modificationDate] as? Date,
+                  let size = (attrs[.size] as? NSNumber)?.uint64Value else { incomplete = true; continue }
+            guard mod >= since else { continue }
             seen.insert(path)
             var c = cache[path] ?? FileCache()
             if size < c.pos { c = FileCache() }                 // rewritten
-            if size == c.pos { cache[path] = c; continue }
+            if size == 0 && !path.hasSuffix(".zst") { cache[path] = c; continue }
+            if size == c.pos, cache[path] != nil { continue }
             if path.hasSuffix(".zst") {
                 // Compressed files do not grow: read the whole thing again only if it changed.
-                guard let z = CodexCLI.zstd, let data = CodexCLI.run(z, ["-dc", path], timeout: 30) else { continue }
+                guard let z = CodexCLI.zstd, let data = CodexCLI.run(z, ["-dc", path], timeout: 30) else { incomplete = true; continue }
                 c = FileCache()
                 read(data, into: &c)
                 c.pos = size
             } else {
-                guard let fh = FileHandle(forReadingAtPath: path) else { continue }
+                guard let fh = FileHandle(forReadingAtPath: path) else { incomplete = true; continue }
                 defer { try? fh.close() }
-                try? fh.seek(toOffset: c.pos)
-                guard var data = try? fh.readToEnd(), let nl = data.lastIndex(of: 0x0A) else { continue }   // a line still being written waits
+                do { try fh.seek(toOffset: c.pos) } catch { incomplete = true; continue }
+                guard var data = try? fh.readToEnd() else { incomplete = true; continue }
+                guard let nl = data.lastIndex(of: 0x0A) else { continue }   // a line still being written waits
                 data = data.prefix(through: nl)
                 c.pos += UInt64(data.count)
                 read(data, into: &c)
@@ -162,7 +172,9 @@ public final class RolloutScanner: @unchecked Sendable {
             cache[path] = c
         }
         for k in cache.keys where !seen.contains(k) { cache.removeValue(forKey: k) }   // fell out of the week, or moved
-        return Self.merge(Array(cache.values), since: since)
+        var result = Self.merge(Array(cache.values), since: since)
+        result.incomplete = incomplete
+        return result
     }
 
     /// Adds the lines in `data` (whole lines only) to one file's state.

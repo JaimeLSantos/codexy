@@ -15,10 +15,14 @@ struct TokensView: View {
             if let u = model.tokenUsage {
                 let d = u.tokenDays(days: period)
                 if d.lines.isEmpty {
-                    Text(L.t("tokens.none")).font(.system(size: 12)).foregroundStyle(T.muted)
+                    Text(L.t(u.incomplete ? "activity.unavailable" : "tokens.none")).font(.system(size: 12)).foregroundStyle(T.muted)
                 } else {
                     chart(d)
                     models(d)
+                    if u.incomplete {
+                        Text(L.t("activity.partial")).font(.system(size: 12)).foregroundStyle(T.dim)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             } else {
                 Text(L.t("tokens.loading")).font(.system(size: 12)).foregroundStyle(T.muted)
