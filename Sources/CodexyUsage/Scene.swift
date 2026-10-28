@@ -151,6 +151,7 @@ final class SceneModel {
     func tickOnce() {
         let s = Self.scale
         let areaW = (size.width - Self.areaLeft) / s
+        clawd.home = pet?.id == "theo"
         mascot = clawd.step(areaWidth: areaW, mouseLook: mouseLook)
         stillTicks = mascot.frame.feet == "both" && mascot.lift == 0 ? stillTicks + 1 : 0
         sky = skySim.step(w: size.width / s, h: size.height / s, lon: lon, now: clock ?? Date())
@@ -280,15 +281,40 @@ struct SceneCanvas: View {
             let px4 = Clawd.pixels(m.frame, skin: skin)
             let top = h + Mascot.sink - m.lift - Double(Clawd.H) * py
             let ox = ax + m.x
+            // Keep the house behind Theo: repainting the roof clips his ears while he is still approaching.
+            // At the door his smaller sprite fits beneath the eave.
+            let isTheo = pet?.id == "theo"
+            let homeU = isTheo ? Mascot.homeProgress(x: m.x, span: w - ax - Mascot.width) : 0
+            let k = Mascot.homeSize(homeU)
+            let hx = ax + Mascot.homeX(span: w - ax - Mascot.width) + Mascot.width / 2 - Double(houseArt[0].count) * px / 2
+            func paintHouse(_ layers: [(Color, [PRect])]) {
+                for (c, rs) in layers {
+                    var p = Path()
+                    for r in rs { p.addRect(CGRect(x: hx + r.x * px, y: h - Double(houseArt.count) * py + r.y * py, width: r.w * px, height: r.h * py)) }
+                    ctx.fill(p, with: .color(c))
+                }
+            }
+            if isTheo { paintHouse(houseAll) }
+            let sox = ox + Mascot.width * (1 - k) / 2                                          // the sprite stays centred on its cell
+            let stop = h + Mascot.sink * (1 - homeU) - py * 0.1 * homeU - m.lift - Double(Clawd.H) * py * k   // feet rise a little as he goes in
             ctx.drawLayer { l in
                 func f(_ rects: [PRect], _ c: Color) {
                     var p = Path()
-                    for r in rects { p.addRect(CGRect(x: ox + r.x * px, y: top + r.y * py, width: r.w * px, height: r.h * py)) }
+                    for r in rects { p.addRect(CGRect(x: sox + r.x * px * k, y: stop + r.y * py * k, width: r.w * px * k, height: r.h * py * k)) }
                     l.fill(p, with: .color(c))
                 }
                 if let pet {
                     let pose = pet.pose(m.frame, mood: m.mood, lift: m.lift, stillTicks: scene.stillTicks)
-                    for (c, rects) in pet.pixels(Pets.mood(m, pct: pct), frame: m.frame, pose: pose.pose, mirror: pose.mirror) { f(rects, Color(hexString: c)) }
+                    let mood = Pets.mood(m, pct: pct)
+                    // Fade the side pose into the face at the door, so the tail does not pop out on waking.
+                    let faceU = max(0, (homeU - 0.85) / 0.15)
+                    l.opacity = pose.pose == nil ? 1 : 1 - faceU
+                    for (c, rects) in pet.pixels(mood, frame: m.frame, pose: pose.pose, mirror: pose.mirror) { f(rects, Color(hexString: c)) }
+                    if pose.pose != nil && faceU > 0 {
+                        l.opacity = faceU
+                        for (c, rects) in pet.pixels(mood, frame: m.frame) { f(rects, Color(hexString: c)) }
+                    }
+                    l.opacity = 1
                 } else {
                     f(px4.body, Color(hexString: skin.body))
                     f(px4.eyes, Color(hexString: skin.eyes))
@@ -300,27 +326,33 @@ struct SceneCanvas: View {
             }
 
             // z, sweat, bubble, love, dust, confetti, soul
-            if let p = m.zzz {
-                let zb = m.frame.dig > 0 ? 9.0 : m.frame.off > 0 ? 12.0 : 19.0
-                let zx = ox + 28 + 3 * sin(p * 2 * .pi), zy = h - (zb + 14 * p)
-                ctx.draw(Text("z").font(.system(size: 7 + 4 * p, weight: .semibold)).foregroundColor(T.muted.opacity(1 - p)),
-                         at: CGPoint(x: zx, y: zy))
-            }
-            if let p = m.sweat {
-                let sx = ox + (m.frame.look < 0 ? 31 : 2), sy = top - 2 + 6 * p
-                ctx.fill(Path(CGRect(x: sx, y: sy, width: 3, height: 4.5)), with: .color(Color(hex: 0x7DD3FC, opacity: 1 - p)))
-            }
-            if !m.bubble.isEmpty {
-                let c: Color = m.bubble == "?" ? T.warn : m.bubble == "!" ? T.ok : Color(hex: 0x93C5FD)
-                ctx.draw(Text(m.bubble).font(.system(size: 11, weight: .bold)).foregroundColor(c),
-                         at: CGPoint(x: ox + Mascot.width / 2, y: h - (22 + m.lift + 1.5 * sin(Double(scene.clawd.tickValue) / 3)) - 6))
-            }
-            if let k = m.love {
-                var p = Path()
-                for (y, row) in heartRows.enumerated() { for (x, c) in row.enumerated() where c == "#" {
-                    p.addRect(CGRect(x: ox + Mascot.width / 2 - 5 + 2 * sin(k * 6) + Double(x) * 1.4, y: h - (23 + m.lift + 14 * k) - 8.4 + Double(y) * 1.4, width: 1.4, height: 1.4))
-                } }
-                ctx.fill(p, with: .color(Color(hex: 0xF87171, opacity: 1 - k)))
+            ctx.drawLayer { fx in
+                // Effects follow the same origin and scale as the pet.
+                fx.translateBy(x: sox, y: stop)
+                fx.scaleBy(x: k, y: k)
+                fx.translateBy(x: -ox, y: -top)
+                if let p = m.zzz {
+                    let zb = m.frame.dig > 0 ? 9.0 : m.frame.off > 0 ? 12.0 : 19.0
+                    let zx = ox + 28 + 3 * sin(p * 2 * .pi), zy = h - (zb + 14 * p)
+                    fx.draw(Text("z").font(.system(size: 7 + 4 * p, weight: .semibold)).foregroundColor(T.muted.opacity(1 - p)),
+                             at: CGPoint(x: zx, y: zy))
+                }
+                if let p = m.sweat {
+                    let sx = ox + (m.frame.look < 0 ? 31 : 2), sy = top - 2 + 6 * p
+                    fx.fill(Path(CGRect(x: sx, y: sy, width: 3, height: 4.5)), with: .color(Color(hex: 0x7DD3FC, opacity: 1 - p)))
+                }
+                if !m.bubble.isEmpty {
+                    let c: Color = m.bubble == "?" ? T.warn : m.bubble == "!" ? T.ok : Color(hex: 0x93C5FD)
+                    fx.draw(Text(m.bubble).font(.system(size: 11, weight: .bold)).foregroundColor(c),
+                             at: CGPoint(x: ox + Mascot.width / 2, y: h - (22 + m.lift + 1.5 * sin(Double(scene.clawd.tickValue) / 3)) - 6))
+                }
+                if let k = m.love {
+                    var p = Path()
+                    for (y, row) in heartRows.enumerated() { for (x, c) in row.enumerated() where c == "#" {
+                        p.addRect(CGRect(x: ox + Mascot.width / 2 - 5 + 2 * sin(k * 6) + Double(x) * 1.4, y: h - (23 + m.lift + 14 * k) - 8.4 + Double(y) * 1.4, width: 1.4, height: 1.4))
+                    } }
+                    fx.fill(p, with: .color(Color(hex: 0xF87171, opacity: 1 - k)))
+                }
             }
             for d in m.dust { ctx.fill(Path(CGRect(x: ax + d.x, y: h - d.bottom - 2, width: 2, height: 2)), with: .color(Color(hex: 0x8B8B94, opacity: d.opacity))) }
             let confColors = [0xF87171, 0xFBBF24, 0x4ADE80, 0x60A5FA, 0xA78BFA, 0xD77757]
@@ -352,6 +384,39 @@ struct SceneCanvas: View {
     private let cloudRects = Sky.cloudShapes.map { rows($0) }
     private let heartRows = [".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."].map(Array.init)
 }
+
+/// Theo's doghouse on the mascot's grid (22 x 14 cells): rows 0-5 are the roof, 6-13 the walls. Each letter is a colour in `housePalette`.
+private let houseArt = [
+    "........oooooo........",
+    "......oHsrrsrrro......",
+    "....oHrsrrsrrsrro.....",
+    "...oHrsrrsrrsrrsrro...",
+    ".oHrrsrrsrrsrrsrrsro..",
+    "oHssssssssssssssssssso",
+    "..okkkkkttttttkkkkko..",
+    "..ovwwvtddddddtvwwvo..",
+    "..ovwtddddddddddtwvo..",
+    "..ovtddddddddddddtvo..",
+    "..ovtddddddddddddtvo..",
+    "..ovtddddddddddddtvo..",
+    "..ovtddddddddddddtvo..",
+    "..ooteeeeeeeeeeeetoo..",
+]
+private let housePalette: [(Character, UInt32)] = [
+    ("o", 0x4A2E1B), ("H", 0xE07A5F), ("r", 0xC4553F), ("s", 0x9A3F30), ("t", 0xF2C894),
+    ("w", 0xB88455), ("v", 0x9C6B43), ("k", 0x7A5232), ("d", 0x1C1410), ("e", 0x2E2219),
+]
+private func houseLayers() -> [(Color, [PRect])] {
+    assert(houseArt.count == 14 && houseArt.allSatisfy { $0.count == 22 })
+    assert(houseArt.joined().allSatisfy { $0 == "." || housePalette.map(\.0).contains($0) })
+    return housePalette.map { (c, hex) in
+        let art = houseArt.map { row in
+            String(row.map { $0 == c ? Character("#") : Character(".") })
+        }
+        return (Color(hex: hex), rows(art))
+    }
+}
+private let houseAll = houseLayers()
 
 func rows(_ art: [String]) -> [PRect] {
     var out: [PRect] = []

@@ -30,6 +30,10 @@ struct HistoryChart: View {
             }
             .frame(height: Self.height + 12)
             caption
+            if !model.history.samples.isEmpty {
+                Text(L.t(mode == .week ? "hist.cycleNote" : (firstSample ?? now) > now - 1440 ? "hist.shortNote" : "hist.recordingNote"))
+                    .font(.system(size: 9.5)).foregroundStyle(T.dim).fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 
@@ -184,7 +188,8 @@ struct HistoryChart: View {
     // MARK: caption
     @ViewBuilder private var caption: some View {
         if model.history.samples.isEmpty {
-            Text(L.t("hist.starts")).font(.system(size: 10)).foregroundStyle(T.dim)
+            Text(L.t(model.usageFailed ? "hist.unavailable" : "hist.waiting"))
+                .font(.system(size: 10)).foregroundStyle(T.dim).fixedSize(horizontal: false, vertical: true)
         } else if let hx = hover {
             Text(hoverText(hx)).font(.system(size: 10)).foregroundStyle(T.muted).lineLimit(1).truncationMode(.tail)
         } else {

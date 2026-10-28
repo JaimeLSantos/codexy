@@ -56,12 +56,25 @@ enum L {
             "status.offline": "status: no connection", "status.open": "Open status.openai.com",
             "resetCredit.one": "reset credit", "resetCredit.many": "reset credits", "resetCredit.expires": "next expires in %@",
             "limit.reached": "Limit reached: %@",
+            "tokens.menu": "Tokens per day…", "tokens.title": "Tokens per day", "tokens.d7": "7 days", "tokens.d30": "30 days", "tokens.others": "other models",
+            "tokens.none": "No Codex use in this period on this computer.", "tokens.loading": "Counting…",
+            "tokens.io": "In: %@ · Out: %@", "tokens.cached": "of the input, %@ cached", "tokens.total": "%@ tokens",
+            "tokens.note": "Counted on this Mac from Codex's own session files (~/.codex/sessions), a token count per model: input plus output, reasoning included. The shares under Details are an estimate of weight, not tokens.",
             "version.update": "Codex %@ · %@ available", "version.tip": "Update in a terminal: npm i -g @openai/codex (or brew upgrade codex). Codexy never runs it.",
             "credits.balance": "%@ credits", "credits.unlimited": "unlimited credits",
             "credits.tip": "Reported by Codex. A reset credit starts your limits over early; use it in Codex. Credits pay for use past the plan.",
             
             
             
+            "details.show": "Show usage details", "details.hide": "Hide usage details",
+            "activity.none": "No recorded Codex activity in this period on this Mac.",
+            "activity.unavailable": "Local session files could not be read. Usage is unavailable; try opening this view again.",
+            "activity.partial": "Some session files could not be read. These totals may be incomplete.",
+            "hist.waiting": "Waiting for the first limit sample. History is saved while Codexy runs.",
+            "hist.unavailable": "Limits could not be read. Refresh from the menu to try again.",
+            "hist.shortNote": "History is still building. Only samples saved while Codexy runs are shown.",
+            "hist.recordingNote": "History is saved while Codexy runs; gaps mean there are no samples.",
+            "hist.cycleNote": "This chart follows your weekly quota reset, not the last seven days. History is saved while Codexy runs.",
             "details": "Details", "period.day": "24 hours", "period.week": "7 days", "thisComputer": "this computer",
             "thisComputer.tip": "Counted from the Codex session files on this Mac. It leaves out other devices, Codex cloud and ChatGPT.",
             
@@ -117,7 +130,7 @@ enum L {
             "weather.manual": "Fixed place", "weather.lat": "Latitude", "weather.lon": "Longitude",
             "set.history": "7-day history", "history.clear": "Clear", "history.clear.tip": "Forget the saved 5h and week samples",
             "hist.samples": "%d samples", "set.files": "Files", "open.log": "Open log", "open.data": "Open data folder",
-            "set.about": "Codexy %@ · built on Claudy and clawd-usage-winwidget (MIT). Not made by OpenAI. Clawd is Anthropic's, a placeholder here.",
+            "set.about": "Codexy %@ · built on Claudy and clawd-usage-winwidget (MIT). Not made by OpenAI.",
             "set.moreHint": "The rest of Claude Code's settings (hooks, permissions, plugins, env) are in settings.json",
         ],
         "pt": [
@@ -138,12 +151,25 @@ enum L {
             "status.offline": "status: sem conexão", "status.open": "Abrir status.openai.com",
             "resetCredit.one": "crédito de reset", "resetCredit.many": "créditos de reset", "resetCredit.expires": "o próximo vence em %@",
             "limit.reached": "Limite atingido: %@",
+            "tokens.menu": "Tokens por dia…", "tokens.title": "Tokens por dia", "tokens.d7": "7 dias", "tokens.d30": "30 dias", "tokens.others": "outros modelos",
+            "tokens.none": "Nenhum uso do Codex neste período neste computador.", "tokens.loading": "Contando…",
+            "tokens.io": "Entrada: %@ · Saída: %@", "tokens.cached": "da entrada, %@ em cache", "tokens.total": "%@ tokens",
+            "tokens.note": "Contado neste Mac a partir dos arquivos de sessão do próprio Codex (~/.codex/sessions), um total de tokens por modelo: entrada mais saída, raciocínio incluído. As partes nos Detalhes são uma estimativa de peso, não tokens.",
             "version.update": "Codex %@ · %@ disponível", "version.tip": "Atualize no terminal: npm i -g @openai/codex (ou brew upgrade codex). O Codexy nunca roda isso.",
             "credits.balance": "%@ créditos", "credits.unlimited": "créditos ilimitados",
             "credits.tip": "Informado pelo Codex. Um crédito de reset zera seus limites antes da hora; use-o no Codex. Créditos pagam o uso além do plano.",
             
             
             
+            "details.show": "Mostrar detalhes de uso", "details.hide": "Ocultar detalhes de uso",
+            "activity.none": "Nenhuma atividade registrada do Codex neste período neste Mac.",
+            "activity.unavailable": "Não foi possível ler os arquivos locais de sessão. Uso indisponível; tente abrir esta tela novamente.",
+            "activity.partial": "Alguns arquivos de sessão não puderam ser lidos. Estes totais podem estar incompletos.",
+            "hist.waiting": "Aguardando a primeira amostra dos limites. O histórico é salvo enquanto o Codexy está aberto.",
+            "hist.unavailable": "Não foi possível ler os limites. Atualize pelo menu para tentar novamente.",
+            "hist.shortNote": "O histórico ainda está sendo formado. Só aparecem amostras salvas enquanto o Codexy está aberto.",
+            "hist.recordingNote": "O histórico é salvo enquanto o Codexy está aberto; intervalos vazios indicam falta de amostras.",
+            "hist.cycleNote": "Este gráfico acompanha o reset da cota semanal, não os últimos sete dias. O histórico é salvo enquanto o Codexy está aberto.",
             "details": "Detalhes", "period.day": "24 horas", "period.week": "7 dias", "thisComputer": "este computador",
             "thisComputer.tip": "Contado dos arquivos de sessão do Codex neste Mac. Não inclui outros aparelhos, o Codex na nuvem nem o ChatGPT.",
             
@@ -198,7 +224,7 @@ enum L {
             "weather.manual": "Local fixo", "weather.lat": "Latitude", "weather.lon": "Longitude",
             "set.history": "Histórico de 7 dias", "history.clear": "Apagar", "history.clear.tip": "Esquecer as amostras salvas de 5h e semana",
             "hist.samples": "%d amostras", "set.files": "Arquivos", "open.log": "Abrir o log", "open.data": "Abrir a pasta de dados",
-            "set.about": "Codexy %@ · feito sobre o Claudy e o clawd-usage-winwidget (MIT). Não é da OpenAI. Clawd é da Anthropic, provisório aqui.",
+            "set.about": "Codexy %@ · feito sobre o Claudy e o clawd-usage-winwidget (MIT). Não é da OpenAI.",
             "set.moreHint": "O resto das configurações do Claude Code (hooks, permissões, plugins, env) fica no settings.json",
         ],
     ]

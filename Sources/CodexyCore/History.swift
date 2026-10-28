@@ -73,15 +73,59 @@ public struct UsageHistory: Equatable, Sendable {
 
 // MARK: projects, from the rollout files
 
+/// Tokens as Codex counts them: `input` includes `cached`, `output` includes the reasoning tokens.
+public struct TokenCount: Equatable, Sendable {
+    public var input = 0.0, cached = 0.0, output = 0.0
+    public init(input: Double = 0, cached: Double = 0, output: Double = 0) { self.input = input; self.cached = cached; self.output = output }
+    public var total: Double { input + output }
+    public static func += (a: inout TokenCount, b: TokenCount) { a.input += b.input; a.cached += b.cached; a.output += b.output }
+}
+
+/// Tokens per local day by model, oldest day first, for the token window. At most `maxModels` lines, the rest in "other".
+public struct TokenDays: Equatable, Sendable {
+    public var days: [Date]
+    public var lines: [(key: String, values: [Double])]
+    public var totals: [String: TokenCount]
+    public static func == (a: TokenDays, b: TokenDays) -> Bool {
+        a.days == b.days && a.totals == b.totals && a.lines.map(\.key) == b.lines.map(\.key) && a.lines.map(\.values) == b.lines.map(\.values)
+    }
+}
+
 public struct ProjectUsage: Equatable, Sendable {
+    /// Some session files could not be read; the available counts may be incomplete.
+    public var incomplete = false
     /// unix hour -> project -> model family -> weight. Everything below is a sum over this.
     public var hourly: [Int: [String: [String: Double]]] = [:]
     public var paths: [String: String] = [:]            // project -> folder, for the hover text
     public var turns: [Int: Int] = [:]                  // unix hour -> turns started (a prompt and the work it led to)
     public var threads: [String: Int] = [:]             // thread id -> last unix hour it was used
+    public var tokens: [Int: [String: TokenCount]] = [:]  // unix hour -> model family -> real tokens (the weights above are an estimate)
     public init(hourly: [Int: [String: [String: Double]]] = [:], paths: [String: String] = [:],
-                turns: [Int: Int] = [:], threads: [String: Int] = [:]) {
-        self.hourly = hourly; self.paths = paths; self.turns = turns; self.threads = threads
+                turns: [Int: Int] = [:], threads: [String: Int] = [:], tokens: [Int: [String: TokenCount]] = [:]) {
+        self.hourly = hourly; self.paths = paths; self.turns = turns; self.threads = threads; self.tokens = tokens
+    }
+
+    public func tokenDays(days: Int, maxModels: Int = 5, now: Date = Date(), calendar: Calendar = .current) -> TokenDays {
+        let today = calendar.startOfDay(for: now)
+        let starts = (0..<days).compactMap { calendar.date(byAdding: .day, value: $0 - days + 1, to: today) }
+        var byModel: [String: [Double]] = [:], totals: [String: TokenCount] = [:]
+        for (h, fs) in tokens {
+            let t = Date(timeIntervalSince1970: TimeInterval(h) * 3600)
+            guard let i = starts.lastIndex(where: { $0 <= t }), t < (calendar.date(byAdding: .day, value: 1, to: starts[i]) ?? .distantFuture) else { continue }
+            for (m, c) in fs {
+                byModel[m, default: Array(repeating: 0, count: days)][i] += c.total
+                totals[m, default: TokenCount()] += c
+            }
+        }
+        let ranked = byModel.sorted { ($0.value.reduce(0, +), $1.key) > ($1.value.reduce(0, +), $0.key) }
+        var lines = ranked.prefix(maxModels).map { (key: $0.key, values: $0.value) }
+        if ranked.count > maxModels {
+            let rest = ranked.dropFirst(maxModels)
+            lines.append((key: "other", values: (0..<days).map { i in rest.reduce(0) { $0 + $1.value[i] } }))
+            totals["other"] = rest.reduce(TokenCount()) { var a = $0; a += totals[$1.key] ?? TokenCount(); return a }
+            for r in rest { totals.removeValue(forKey: r.key) }
+        }
+        return TokenDays(days: starts, lines: lines, totals: totals)
     }
 
     public func turnCount(sinceHour: Int = .min) -> Int { turns.filter { $0.key >= sinceHour }.values.reduce(0, +) }

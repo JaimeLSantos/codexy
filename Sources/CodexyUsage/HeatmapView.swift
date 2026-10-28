@@ -14,7 +14,8 @@ struct HeatmapView: View {
         let g = grid, peak = g.flatMap { $0 }.max() ?? 0, total = g.flatMap { $0 }.reduce(0, +)
         VStack(alignment: .leading, spacing: 3) {
             if peak <= 0 {
-                Text(L.t("nothingYet")).font(.system(size: 10.5)).foregroundStyle(T.dim)
+                Text(L.t(model.projects == nil ? "tokens.loading" : model.projects?.incomplete == true ? "activity.unavailable" : "activity.none"))
+                    .font(.system(size: 10.5)).foregroundStyle(T.dim).fixedSize(horizontal: false, vertical: true)
             } else {
                 GeometryReader { geo in
                     let cw = (geo.size.width - labelW - gap * CGFloat(cols - 1)) / CGFloat(cols)

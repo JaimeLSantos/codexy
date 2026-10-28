@@ -1,8 +1,8 @@
 # Status
 
-Last review: 2026-10-22. `main` has PRs #1 (running sessions), #2 (status and credits), #3 (projects, models, heatmap) and #4 (mascot notes). 57 tests, CI (macOS runner) green on every PR. No open PRs or issues. Released 0.1.0 on 2026-10-22 (GitHub release + cask `juliobianco/tap/codexy`).
+Last review: 2026-10-23. Release 0.2.2 adds a labelled Details control, direct access to Tokens, and distinct loading/empty/unavailable/partial-data messages. Earlier Theo doghouse, tokens and exact-session-state features remain available. Updates: `brew upgrade --cask codexy` (no self-update, same as Claudy). 68 tests passed locally; live-data coverage gaps are recorded in [USAGE-VALIDATION.md](USAGE-VALIDATION.md).
 
-## Done (0.1.0, unreleased)
+## Done (0.1.0)
 - SwiftPM package `CodexyCore` / `CodexyUsage` / `CodexyCoreTests`, copied from Claudy's provider-neutral code.
 - Codex reader (`Usage.swift`): `codex app-server` → `account/rateLimits/read`; fallback to the last `token_count` event of the newest rollout file (plain or `.zst`). Tests with anonymised fixtures.
 - Panel: 5h hero + bar, reset time, pace, week row, plan in the footer, 24h / week chart. Menu bar: two mini bars 5h / W.
@@ -16,6 +16,7 @@ Done:
 - Four pets drawn from text files on the 18 x 12 grid: Theo (theo), Bit (bit), Coruja (owl), Livrinho (book). Each has `[normal] [slack] [crit] [sleep]` faces; they reuse the mascot brain (walk, hop, burrow, lie on the back).
 - Theo is the default and first in the list. He is the owner's blue heeler, drawn from his photos (the photos stay out of the repo). The old id `heeler` still maps to him.
 - Theo walks in side view (`[walk1] [walk2]`, mirrored when going left) and sits (`[sit]`) after ~3 s standing still, when idle or when a session waits for you. Side poses are optional per pet.
+- Theo has a doghouse (drawn in `Scene.swift`, only for `theo`): `Mascot.home` makes sleep and doze walk to `Mascot.homeX` instead of burrowing; the others keep burrowing. The house is pixel art (`houseArt` in `Scene.swift`, 22 x 14 cells). He shrinks to 62% as he nears the door (`Mascot.homeProgress`, by distance to `homeX`, so leaving is the same curve backwards) and sleeps beneath the eave. The house stays behind him so the roof does not clip his ears during entry/exit; side poses fade into the face in the last steps at the door. Bubble, heart, sweat and z follow his scaled sprite. Verified with `swift build` and 65 passing tests (cache outside Documents), plus deterministic `--scenes` home-in/home-out and effect PNGs with `CODEXY_DEMO=1 CODEXY_PET=theo`.
 - Picker with a live preview in Settings → Aparência (Look) → Mascote. Own pets: `~/Library/Application Support/Codexy/pets/*.txt` (same id replaces a built-in one).
 - `--pets DIR` renders every pet in every mood and pose; `CODEXY_PET=<id>` previews one in `--scenes`.
 
@@ -31,19 +32,25 @@ Pending:
 - "Waiting for you" is a guess: approval prompts are not written to the file. A shell/patch call with no output, file quiet ≥ 3 s, no process started under codex since the call, and `approval_policy` ≠ never → waiting. `request_user_input` → waiting at once. Known misses: an auto-reviewer thinking for a few seconds looks like a prompt; an MCP tool approval is shown as working.
 
 ## Hidden or stubbed (the provider data is not wired yet)
-- Usage profile (context size, skills, MCP) and the token stats window: Claude-only reports, no Codex counterpart. A tokens-per-day window could be built from the same rollout scan.
+- Usage profile (context size, skills, MCP): a Claude-only report, no Codex counterpart.
 - CLI version/update row: removed (Claudy read `claude --version` and ran `claude update`). Status is back, from OpenAI.
 - Settings: the Claude Code settings editor tab is gone. The Fable toggle is gone (status is back); "Running sessions" and "Plan and account" toggles stay.
 - `Strings.swift`: the Claudy keys for removed features are gone (profile, tokens window, Fable, changes). Keys the tokens window needs are written again when it is built.
 
 ## Checked live vs not checked (as of 2026-10-22, codex-cli 0.163.0, Plus plan)
 - Checked on the owner's Mac: limits from `app-server`; sessions list with a TUI open (1 session, idle, named by its thread title); Details with a real week (turns, sessions, projects, models, heatmap filled).
-- Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path of the project scan (only with sample data: every file of the last 7 days was plain `.jsonl`); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
+- Not checked: "waiting for you" (the owner runs with approval = never, so it never fires); the `.zst` path with a real old file (a test now compresses a rollout with `zstd` and scans it; skipped where `zstd` is missing); the project weights against the 5h bar; why 16 files changed in a week show as 6 sessions (likely forks and auto-reviews being merged or dropped, not verified); reset credits and paid credits with a non-zero value.
 
-## Done after the review (branch `claude/extra-limits-version`, not merged)
+## Done (0.1.0, added just before the release)
 - Extra limits (`ExtraLimit`, `reachedType` in `Usage.swift`; `ExtraLimitsLine` in `StatusUI.swift`). Real answer checked 2026-10-22 on Plus: `rateLimitsByLimitId` has only `codex`, `rateLimitReachedType` and `individualLimit` are null, `spendControlReached` false (not read). The extra-bucket and reached lines are tested with fixtures only.
 - Distribution pieces: app icon with Theo (`scripts/make-icon.sh`, `Resources/AppIcon.icns`), `scripts/package.sh` (universal zip + sha256, tested: `x86_64 arm64`), README with pictures from `CODEXY_DEMO=1 ... -language en --readme docs/images` (made-up data). Still to do: release 0.1.0 on GitHub and the cask (both outward, need the owner's go).
 - Codex version (`Version.swift`): `codex --version` plus GitHub `releases/latest` (tag `rust-v0.163.0`), every 6 h, in the Details footer.
+
+## Done in 0.2.0
+- Tokens per day window (`TokensView.swift`, `ProjectUsage.tokens` / `tokenDays` in `History.swift`): the rollout scan also keeps real tokens per hour and model; the window has its own scanner (30 days back) and scans when it opens. Checked live with the owner's 30 days (bars, per-model totals). Local days; models beyond the top 5 go to "other".
+- Exact session state from the app-server daemon (`CodexDaemon.swift`): the TUI starts `codex app-server --listen unix://`, its socket `~/.codex/app-server-control/app-server-control.sock` speaks WebSocket JSON-RPC. `thread/loaded/list` + `thread/read` (no turns) give `status`: idle | active with `activeFlags` (`waitingOnApproval`, `waitingOnUserInput`). Used when the socket answers (2 s limit), else the old guess from the rollout file. Checked live 2026-10-22: it answers and lists an idle TUI thread. Not checked: an active thread with a flag (needs approvals on).
+- Threads the daemon holds but no process has a rollout file open for (an idle TUI between turns closes it: the session was missing before) are listed too, `pid` 0; sub-agents, reviews and ephemeral threads are hidden. The Codex desktop app is not installed on this Mac, so whether it uses the same daemon is unknown.
+- `.zst` rollout path tested end to end (a test compresses a rollout with `zstd`; skipped where it is missing).
 
 ## Pending
 Checks (cheap, no code unless they fail):
@@ -52,9 +59,7 @@ Checks (cheap, no code unless they fail):
 - Project weights: compare a few hours of the scan with how much the 5h bar moved.
 
 Limits and data:
-- Tokens window: tokens per day / per model from the same rollout scan (Claudy's token stats window has no Codex source otherwise).
 - Keep one `codex app-server` running: measured 2026-10-22, one probe costs ~0.4 s of CPU a minute (about 0.7% of a core). Decided to keep the fresh process per probe; revisit only if it shows up in battery use.
-- Exact "waiting": opt-in Codex `PermissionRequest`/`Stop` hook or the app-server daemon socket (`thread/loaded/list` reports `waitingOnApproval`).
 - `~/.codex/config.toml` editor (like Claudy's `settings.json` tab): read-only view first; any write only after a click, keeping comments and order.
 
 Mascot: see the Mascot section (side poses for Bit, Coruja and Livrinho; accessories; app icon with Theo).
@@ -67,7 +72,12 @@ Later:
 
 Housekeeping: the merged branches `claude/project-thread-{qwaplz,xtdazr,j1w6nj}` are still on GitHub (can be deleted).
 
-## Next (proposed order for 2026-10-23)
-1. The three checks above (waiting with approvals, desktop app, weights): they decide whether sessions and Details need fixes before a release.
-2. Release 0.1.0 and the cask (icon, package.sh and README are done).
-3. Then: tokens window, `config.toml` editor, side poses and accessories, long-lived app-server.
+## Next (proposed order)
+Included in 0.2.2, 2026-10-23: dashboard items 2–4. Details has a labelled row below status (the header stays compact), preserving `detailsOpen` and `showDetails`; Tokens opens directly from Details using the existing window. `ProjectUsage.incomplete` carries enumeration/read/decompression failures so absent or partial sources are explained instead of shown as known zero usage; available counts remain visible with a warning. Charts explain first samples, short/gapped history and the quota cycle. Checked with English/Portuguese snapshots for collapsed/expanded Details, day/week, loading, empty, unavailable, partial data and young history. Full core suite: 68 tests. Remaining: interactive checks on the real menu-bar window, live VS Code/desktop coverage, quota calibration and the skills/plugins/MCP source investigation. Temporary preview hooks were removed.
+
+Dashboard priority (2026-10-23): follow the six-item checklist in [ROADMAP.md](../ROADMAP.md#usage-dashboard-execution-order): real-data validation → Details discovery → missing/partial-data states → direct tokens access → skills/plugins/MCP source investigation → supported read-only section. Item 1 has a partial local audit; its remaining checks and items 5–6 are pending; items 2–4 are included in 0.2.2; the existing dashboard is implemented, and the new section depends on verified data sources. [Local audit](USAGE-VALIDATION.md): four anonymised sessions matched an independent token/turn count; 24h/7d Details, heatmap and 7/30-day Tokens rendered with real data. TUI detected; live VS Code/desktop coverage and weights versus the quota remain unverified. That earlier audit changed no production code. The remaining work below follows that dashboard sequence.
+
+1. The checks above that only the owner can do (waiting with approvals on, project weights vs the 5h bar, credits and extra limits with real values, the Codex desktop app).
+2. `~/.codex/config.toml` view (read-only first).
+3. Side poses and accessories for the other mascots.
+4. Notarization, if an Apple Developer account appears.
