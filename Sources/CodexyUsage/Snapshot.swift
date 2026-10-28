@@ -31,9 +31,11 @@ enum Snapshot {
            let lo = ProcessInfo.processInfo.environment["CODEXY_LON"].flatMap(Double.init) {
             model.scene.skySim.lat = la; model.scene.lon = lo; model.scene.refreshWeather(force: true)
         }
+        model.refreshTokens()
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
             model.scene.warmup(Int(ProcessInfo.processInfo.environment["CODEXY_TICKS"] ?? "") ?? 60)
             write(PanelView(model: model).environment(\.colorScheme, .dark), "\(dir)/panel.png")
+            write(TokensView(model: model).environment(\.colorScheme, .dark), "\(dir)/tokens.png")
             write(MiniBars(session: model.usage?.session?.percent, week: model.usage?.week?.percent, stale: false,
                            style: Prefs.shared.barStyle, left: Prefs.shared.showLeft)
                 .padding(8).background(Color(white: 0.15)), "\(dir)/bar.png")
@@ -63,6 +65,32 @@ enum Snapshot {
             m.size = CGSize(width: 272, height: 56)
             m.warmup(sc.ticks)
             models.append((sc.name, m))
+        }
+        if Pets.current()?.id == "theo" {
+            let m = SceneModel(seed: 1)
+            m.clock = at(23); m.skySim.forceWeather = 0
+            m.clawd.observe(MascotInput())
+            for tick in 1...80 {
+                m.tickOnce()
+                if [1, 15, 30, 45, 80].contains(tick) {
+                    write(SceneCanvas(scene: m).frame(width: 272, height: 56).background(T.bg), "\(dir)/home-in-\(tick).png")
+                }
+            }
+            for effect in ["z", "sweat", "bubble", "heart"] {
+                m.mascot.zzz = effect == "z" ? 0.25 : nil
+                m.mascot.sweat = effect == "sweat" ? 0.25 : nil
+                m.mascot.bubble = effect == "bubble" ? "?" : ""
+                m.mascot.love = effect == "heart" ? 0.25 : nil
+                write(SceneCanvas(scene: m).frame(width: 272, height: 56).background(T.bg), "\(dir)/home-\(effect).png")
+            }
+            var awake = MascotInput(); awake.sessions = 1; awake.busy = 1
+            m.clawd.observe(awake)
+            for tick in 1...60 {
+                m.tickOnce()
+                if [1, 5, 10, 20, 40, 60].contains(tick) {
+                    write(SceneCanvas(scene: m).frame(width: 272, height: 56).background(T.bg), "\(dir)/home-out-\(tick).png")
+                }
+            }
         }
         let sheet = VStack(alignment: .leading, spacing: 6) {
             ForEach(models.indices, id: \.self) { i in

@@ -75,6 +75,12 @@ struct CodexyApp: App {
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
+
+        Window(L.t("tokens.title"), id: "tokens") {
+            TokensView(model: model)
+        }
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
     }
 }
 

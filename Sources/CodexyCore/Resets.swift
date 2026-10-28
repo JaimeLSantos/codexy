@@ -63,8 +63,10 @@ public struct ResetLog: Codable, Equatable, Sendable {
     /// The rollout files changed since the last scan, their snapshots fed in time order.
     public mutating func scan(home: String = CodexCLI.home, now: Date = Date()) {
         let after = scannedUntil.map { $0.addingTimeInterval(-60) }
-        for s in ResetScan.snapshots(home: home, changedAfter: after) { observe(s) }
-        scannedUntil = now
+        let r = ResetScan.snapshots(home: home, changedAfter: after)
+        for s in r.snapshots { observe(s) }
+        // A listing that was cut short (a folder that could not be read) must not count as "read until now".
+        if !r.incomplete { scannedUntil = now }
     }
 
     public static var fileURL: URL { UsageHistory.fileURL.deletingLastPathComponent().appendingPathComponent("resets.json") }
@@ -76,10 +78,11 @@ public struct ResetLog: Codable, Equatable, Sendable {
 
 /// The limits copied into the rollout files: only `token_count` lines are decoded, picked by their start.
 public enum ResetScan {
-    public static func snapshots(home: String, changedAfter: Date?) -> [WindowSnapshot] {
+    public static func snapshots(home: String, changedAfter: Date?) -> (snapshots: [WindowSnapshot], incomplete: Bool) {
         let fm = FileManager.default
         var out: [WindowSnapshot] = []
-        for path in RolloutScanner.files(home: home) {
+        let listing = RolloutScanner.files(home: home)
+        for path in listing.paths {
             if let after = changedAfter {
                 guard let mod = (try? fm.attributesOfItem(atPath: path))?[.modificationDate] as? Date, mod >= after else { continue }
             }
@@ -92,7 +95,7 @@ public enum ResetScan {
                 if let s = snapshot(Data(line)) { out.append(s) }
             }
         }
-        return out.sorted { $0.at < $1.at }
+        return (out.sorted { $0.at < $1.at }, listing.incomplete)
     }
 
     /// One `token_count` line: the longest window of the main "codex" limits.

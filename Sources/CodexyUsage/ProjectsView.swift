@@ -15,7 +15,7 @@ struct ActivityStats: View {
     let period: String
 
     var body: some View {
-        if let p = model.projects {
+        if let p = model.projects, !p.incomplete || p.sessionCount(sinceHour: since(model, period)) > 0 {
             let s = since(model, period), turns = p.turnCount(sinceHour: s), sessions = p.sessionCount(sinceHour: s)
             HStack(alignment: .top, spacing: 26) {
                 stat(turns, L.word("turn", turns))
@@ -46,7 +46,13 @@ struct ActivityView: View {
             heading(period == "day" ? L.t("projects1") : L.t("projects7")).help(L.t("projects.tip"))
             if let p = model.projects {
                 let top = p.ranked(sinceHour: s).prefix(4)
-                if top.isEmpty { Text(L.t("nothingYet")).font(.system(size: 10.5)).foregroundStyle(T.dim) }
+                if p.incomplete {
+                    Text(L.t(top.isEmpty ? "activity.unavailable" : "activity.partial"))
+                        .font(.system(size: 10.5)).foregroundStyle(T.dim).fixedSize(horizontal: false, vertical: true)
+                } else if top.isEmpty {
+                    Text(L.t("activity.none")).font(.system(size: 10.5)).foregroundStyle(T.dim)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 ForEach(Array(top), id: \.name) { t in
                     Button { withAnimation(.easeOut(duration: 0.15)) { openProject = openProject == t.name ? nil : t.name } } label: {
                         row(Redact.name(t.name, "project"), Int(t.share.rounded()), Color(hex: 0xD77757), help: Redact.on ? nil : p.paths[t.name])
@@ -55,7 +61,7 @@ struct ActivityView: View {
                     if openProject == t.name { projectDetail(p, t.name, s) }
                 }
             } else {
-                Text(L.t("counting")).font(.system(size: 10.5)).foregroundStyle(T.dim)
+                Text(L.t("tokens.loading")).font(.system(size: 10.5)).foregroundStyle(T.dim)
             }
         }
         if let p = model.projects {

@@ -72,7 +72,21 @@ public final class Mascot {
     public static let px = 2.0, py = 2.2
     public static let sink = 2 * py
     static let burrowDig = 4
+    /// Where a mascot with a home stands to sleep: this far in from the right end of the area (the mask fades the edge).
+    public static func homeX(span: Double) -> Double { max(0, span - 26) }
+    /// A mascot with a home shrinks as it nears the door (it is walking away from us, into the house) and grows again as it leaves.
+    /// Size depends only on the distance to `homeX`, so going in and coming out are the same curve backwards.
+    public static let homeScale = 0.62, homeZone = 40.0
+    /// 0 far from the door .. 1 at the door; smoothstep.
+    public static func homeProgress(x: Double, span: Double) -> Double {
+        let t = max(0, 1 - abs(x - homeX(span: span)) / homeZone)
+        return t * t * (3 - 2 * t)
+    }
+    /// Size factor (1 ... `homeScale`) for a `homeProgress` value.
+    public static func homeSize(_ progress: Double) -> Double { 1 - (1 - homeScale) * progress }
 
+    /// Set for a mascot with a doghouse: asleep or dozing he walks home instead of burrowing.
+    public var home = false
     public var rnd: Rand
     var x = -1.0, dir = 1.0
     var target: Double?
@@ -177,7 +191,9 @@ public final class Mascot {
         if mood == "idle" && now.timeIntervalSince(idleSince) >= 600 { mood = "doze" }
 
         // Falling asleep: burrows into the sand once the current animation finishes; waking: out at once.
-        if mood == "sleep" {
+        let homeX = Mascot.homeX(span: span)
+        let homing = home && (mood == "sleep" || mood == "doze") && act == nil && abs(x - homeX) > 0.5
+        if mood == "sleep" && !home {
             if !buried && act == nil { buried = true; start("burrow") }
         } else if buried { buried = false; start("unburrow") }
 
@@ -191,9 +207,17 @@ public final class Mascot {
         if act != nil {
             bubble = stepAct(&f, &lift)
             canBlink = false
+        } else if homing {
+            // Sleepy: back to the doghouse, at an easy pace.
+            target = nil
+            let d = homeX - x, speed = 0.9 * max(tier.speed, 0.5)
+            dir = d > 0 ? 1 : -1
+            x = abs(d) <= speed ? homeX : x + speed * dir
+            look = Int(dir); f.look = look
+            f.feet = (tick / 3) % 2 == 1 ? "left" : "right"
         } else {
             switch mood {
-            case "sleep": f.dig = Mascot.burrowDig; f.eyes = "closed"; f.look = 0; zzz = true
+            case "sleep": f.dig = home ? 0 : Mascot.burrowDig; f.eyes = "closed"; f.look = 0; zzz = true
             case "doze":
                 f.look = 0
                 let p = tick % 70

@@ -102,6 +102,7 @@ public enum CodexSessions {
         let root = URL(fileURLWithPath: home + "/sessions").resolvingSymlinksInPath().path + "/"
         let procs = Proc.all()
         let names = threadNames(home: home)
+        let daemon = CodexDaemon.threads(home: home)      // exact when the daemon answers; else the guess from the file
         var seen = Set<String>(), out: [AgentSession] = []
         for p in procs where p.comm.lowercased().contains("codex") {
             for path in Proc.openFiles(p.pid) where path.hasPrefix(root) && path.hasSuffix(".jsonl")
@@ -110,12 +111,18 @@ public enum CodexSessions {
                 seen.insert(path)
                 if s.hidden { continue }
                 let mtime = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date ?? now
-                let v = s.verdict(now: now, lastWrite: mtime, newestChild: Proc.newestDescendant(of: p.pid, in: procs))
+                var v = s.verdict(now: now, lastWrite: mtime, newestChild: Proc.newestDescendant(of: p.pid, in: procs))
+                if let d = daemon?[s.thread]?.state { v = (d.busy, d.waiting) }
                 var name = names[s.thread] ?? ""
                 if name.isEmpty { name = (s.cwd as NSString).lastPathComponent }
                 out.append(AgentSession(pid: p.pid, name: name, cwd: s.cwd, busy: v.busy, waiting: v.waiting,
                                         git: s.cwd.isEmpty ? nil : Git.info(cwd: s.cwd), thread: s.thread))
             }
+        }
+        // A thread the daemon holds but no process shows an open file for (idle between turns closes it): still a session.
+        for (id, t) in (daemon ?? [:]) where !t.hidden && !t.cwd.isEmpty && !out.contains(where: { $0.thread == id }) {
+            out.append(AgentSession(pid: 0, name: t.name ?? names[id] ?? (t.cwd as NSString).lastPathComponent, cwd: t.cwd,
+                                    busy: t.state.busy, waiting: t.state.waiting, git: Git.info(cwd: t.cwd), thread: id))
         }
         return out.sorted { ($0.pid, $0.thread) < ($1.pid, $1.thread) }
         #else

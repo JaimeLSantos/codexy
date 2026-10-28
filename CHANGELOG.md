@@ -8,6 +8,25 @@
 - Percentages show what is left, as Codex does ("% left"): 100% is a full limit, the bars drain as you use it. Colours still follow the use (green, yellow, red as it runs out). Settings → Show → "Show what is left" turns back to the used percent. The line under the big number says what it is ("Left this week · resets in…"); the pace lines say "runs out at…" instead of "100% at…", right in both modes. The history chart still draws the use.
 - When Codex reports no 5h window (Plus today), the big number, its bar, the reset line, the hearts and the mascot follow the weekly limit, labelled "week", and the separate week row is hidden. The menu bar shows one row with the weekly percent, whatever the label style; the folded bubble shows the week.
 
+## [0.2.2] - 2026-10-23
+### Changed
+- Usage Details has a labelled expand/collapse row below status and a direct “Tokens per day…” entry; saved visibility preferences are preserved.
+- Activity and tokens distinguish loading, no recorded use, unavailable files and partial reads. Limits charts explain first samples, short history, gaps and the weekly quota cycle.
+
+## [0.2.1] - 2026-10-23
+### Changed
+- Recorded a partial local dashboard validation in `docs/USAGE-VALIDATION.md`: independent counts for four anonymised sessions, real-data chart rendering and remaining client-coverage/quota-calibration checks. No production behaviour changed.
+- Documented the usage dashboard backlog in execution order: validate existing data, improve Details discovery and empty states, expose tokens directly, then investigate and implement supported read-only skills/plugins/MCP information. This is planning only.
+- The doghouse is pixel art on the mascot's grid (about a third lower, shingled roof, plank walls, arched door). Theo shrinks as he walks to it, sleeps inside with his ears visible under the eave and grows back to full size when he leaves. His side pose fades near the door; bubbles, hearts, sweat and z follow his size.
+- Theo no longer burrows: he has a doghouse at the right end of the scene and walks home to sleep (no sessions) or doze (idle 10 min). The other mascots still burrow.
+
+## [0.2.0] - 2026-10-22
+### Added
+- Tokens per day window (panel menu → "Tokens per day…"): stacked bars by model for 7 or 30 days, with input, output and cached totals per model. Real token counts from the rollout files, the same scan as Details; nothing is read but the counts.
+
+### Changed
+- Running sessions: the state (working, waiting for you, idle) now comes from Codex's own app-server daemon when it is running, instead of a guess from the session file; the guess stays as the fallback. An idle session whose file Codex had closed now shows up too.
+
 ## [0.1.0] - 2026-10-22
 ### Added
 - First version, built from Claudy Usage: Codex 5h and weekly limits in the menu bar and the panel.
